@@ -54,6 +54,14 @@ void evaluate_seed() {
     sd_cur->recv_fname = NULL;
     free(sd_cur);
     sd_cur = NULL;
+
+    // also free sd_cur from queue
+    free(sd_tmp->seed_bin);
+    sd_tmp->seed_bin = NULL;
+    free(sd_tmp->recv_fname);
+    sd_tmp->recv_fname = NULL;
+    free(sd_tmp);
+    sd_tmp = NULL;
 };
 
 

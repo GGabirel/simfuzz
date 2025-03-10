@@ -398,9 +398,10 @@ c_seed_t *MongoDataEngine::get_next_seed(mongoc_cursor_t *cursor) {
     bson_iter_init_find(&iter, doc, "len");
     sd_cur->len_bin = bson_iter_int32(&iter);
     const uint8_t *file_binary = NULL;
+    sd_cur->seed_bin = (uint8_t *) malloc(sd_cur->len_bin);
     if (bson_iter_init_find(&iter, doc, "seed")) {
         bson_iter_binary(&iter, &subtype, &binary_len, &file_binary);
-        sd_cur->seed_bin = (uint8_t *) file_binary;
+        memcpy(sd_cur->seed_bin, file_binary, binary_len);
 
 
     }
@@ -471,9 +472,10 @@ bool MongoDataEngine::get_check_to_queue(bson_t *query){
         bson_iter_init_find(&iter, doc, "len");
         sd_cur->len_bin = bson_iter_int32(&iter);
         const uint8_t *file_binary = NULL;
+        sd_cur->seed_bin = (uint8_t *) malloc(sd_cur->len_bin);
         if (bson_iter_init_find(&iter, doc, "seed")) {
             bson_iter_binary(&iter, &subtype, &binary_len, &file_binary);
-            sd_cur->seed_bin = (uint8_t *) file_binary;
+            memcpy(sd_cur->seed_bin, file_binary, binary_len);
         }
         bson_iter_init_find(&iter, doc, "depth");
         sd_cur->depth = bson_iter_int32(&iter);
@@ -576,9 +578,10 @@ c_seed_t *MongoDataEngine::get_seed(std::string seed_fname) {
     bson_iter_init_find(&iter, doc, "len");
     sd_cur->len_bin = bson_iter_int32(&iter);
     const uint8_t *file_binary = NULL;
+    sd_cur->seed_bin = (uint8_t *) malloc(sd_cur->len_bin);
     if (bson_iter_init_find(&iter, doc, "seed")) {
         bson_iter_binary(&iter, &subtype, &binary_len, &file_binary);
-        sd_cur->seed_bin = (uint8_t *) file_binary;
+        memcpy(sd_cur->seed_bin, file_binary, binary_len);
     }
     bson_iter_init_find(&iter, doc, "depth");
     sd_cur->depth = bson_iter_int32(&iter);
@@ -693,9 +696,10 @@ c_seed_t *MongoDataEngine::get_check_seed(std::string seed_fname) {
     bson_iter_init_find(&iter, doc, "len");
     sd_cur->len_bin = bson_iter_int32(&iter);
     const uint8_t *file_binary = NULL;
+    sd_cur->seed_bin = (uint8_t *) malloc(sd_cur->len_bin);
     if (bson_iter_init_find(&iter, doc, "seed")) {
         bson_iter_binary(&iter, &subtype, &binary_len, &file_binary);
-        sd_cur->seed_bin = (uint8_t *) file_binary;
+        memcpy(sd_cur->seed_bin, file_binary, binary_len);
     }
     bson_iter_init_find(&iter, doc, "depth");
     sd_cur->depth = bson_iter_int32(&iter);

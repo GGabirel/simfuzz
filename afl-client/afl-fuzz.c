@@ -1027,6 +1027,9 @@ struct queue_entry* download_new_seeds() {
             queue_top->passed_det = seedEvalTask->passed_det;
             queue_top->downloaded = 0;
 
+            free(seedEvalTask->recv_fname);
+            free(seedEvalTask);
+
             if(retq == NULL) retq = queue_top;
 
             map_set(&seed_map, fname, queue_top);
@@ -8324,6 +8327,8 @@ void check_seed_downloaded(char** argv, struct queue_entry* q) {
         }
     }
     q->downloaded = 1;
+    free(seedEvalTask->recv_fname);
+    free(seedEvalTask->seed_bin);
     free(seedEvalTask);
     return ;
 }
@@ -8352,6 +8357,7 @@ void update_seed_info(const char *fname) {
     queue_cur->handicap = seed->handicap;
     queue_cur->was_fuzzed = seed->was_fuzzed;
     queue_cur->passed_det = seed->passed_det;
+    free(seed->recv_fname);
     free(seed);
 }
 

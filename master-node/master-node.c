@@ -956,6 +956,10 @@ struct queue_entry* setup_afl_seeds_from_db(){
             if(retq == NULL) retq = queue_top;
             map_set(&seed_map, fname, queue_top);
 
+
+            free(seedEvalTask->recv_fname);
+            free(seedEvalTask->seed_bin);
+            free(seedEvalTask);
         }
     }
     return retq;
