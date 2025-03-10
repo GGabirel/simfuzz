@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>数据库详细信息</title>
+    <link rel="stylesheet" type="text/css" href="../static/css/index.css">
+    <link rel="stylesheet" type="text/css" href="../static/css/bootstrap.css">
+    <link rel="stylesheet" type="text/css" href="../static/plugins/DataTables/datatables.css">
+    <script src="../static/js/jquery-3.3.1.js"></script>
+    <script src="../static/js/popper.min.js"></script>
+    <script src="../static/js/bootstrap.min.js"></script>
+</head>
+<body>
+<header class="c-header">
+    <div class="c-row">
+        <div class="column c-col-lg-5 c-col-sm-5 order-1">
+            <a class="c-header_url" href="#">pfuzz.hunter-ht.cn</a>
+        </div>
+        <div class="column c-col-lg-2 c-col-sm-2 order-2">
+            <div class="c-header_logo">Hunter.ht</div>
+        </div>
+        <div class="column c-col-lg-5 c-col-sm-5 order-3">
+            <ul class="c-mainmenu">
+                <li><a class="c-mainmenu" href="#">任务：{{ db_name }}&nbsp;表:{{ col_name }}</a></li>
+
+                <li><a class="c-mainmenu" href="../">BACK</a></li>
+            </ul>
+        </div>
+    </div>
+</header>
+<div class="tableItem">
+    <table class="table table-active table-hover dataTables-example">
+        <thead class="thead-light">
+            <tr>
+                <th scope="col">#</th>
+                <th scope="col">id</th>
+                <th scope="col">fname</th>
+                <th scope="col">len</th>
+                <th scope="col">describe</th>
+                <th scope="col">time</th>
+            </tr>
+
+        </thead>
+        <tbody>
+        {% for r in result %}
+            <tr>
+                <th scope="row">{{ forloop.counter }}</th>
+{#                <td><a href='/download?db={{ db_name }}&col={{ col_name }}&id={{ r.fname }}'>{{ r.fname }}</a></td>#}
+                <td>{{ r.seed_id }}</td>
+                <td> <button onclick="download('{{ db_name }}','{{ col_name }}','{{ r.fname }}')">{{ r.fname }}</button> </td>
+                <td>{{ r.len }}</td>
+                <td>{{ r.describe }}</td>
+                <td>{{ r.time }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+<!--
+<div class="tableItem" style="display: none;">
+    <h4>表：SeedBook</h4>
+    <table class="table table-active table-hover dataTables-example">
+        <thead class="thead-light">
+            <tr>
+                <th scope="col">#</th>
+                <th scope="col">len</th>
+                <th scope="col">fname</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for seedbook in seedbooks %}
+            <tr>
+                <th scope="row">{{ forloop.counter }}</th>
+                <td>{{ seedbook.len }}</td>
+                <td>{{ seedbook.fname }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+<div class="tableItem" style="display: none;">
+    <h4>表：binary</h4>
+    <table class="table table-active table-hover dataTables-example">
+        <thead class="thead-light">
+            <tr>
+                <th scope="col">#</th>
+                <th scope="col">name</th>
+                <th scope="col">length</th>
+            </tr>
+        </thead>
+        <tbody id="binary">
+        {% for binary in binaries %}
+            <tr>
+                <th scope="row">{{ forloop.counter }}</th>
+                <td><button onclick="load_file(this)">{{ binary.name }}</button></td>
+                <td>{{ binary.length }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+</div>
+<div class="tableItem" style="display: none;">
+    <h4>表：seed</h4>
+    <table class="table table-active table-hover dataTables-example">
+        <thead class="thead-light">
+            <tr>
+                <th scope="col">#</th>
+                <th scope="col">fname</th>
+                <th scope="col">len</th>
+                <th scope="col">describe</th>
+                <th scope="col">time</th>
+            </tr>
+
+        </thead>
+        <tbody>
+        {% for seed in seeds %}
+            <tr>
+                <th scope="row">{{ forloop.counter }}</th>
+                <td><a href="#">{{ seed.fname }}</a></td>
+                <td>{{ seed.len }}</td>
+                <td>{{ seed.describe }}</td>
+                <td>{{ seed.time }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+<div class="tableItem" style="display: none;">
+    <h4>表：crashes</h4>
+    <table class="table table-active table-hover dataTables-example">
+        <thead class="thead-light">
+            <tr>
+                <th scope="col">#</th>
+                <th scope="col">fname</th>
+                <th scope="col">len</th>
+                <th scope="col">describe</th>
+                <th scope="col">time</th>
+            </tr>
+
+        </thead>
+        <tbody>
+        {% for crash in crashes %}
+            <tr>
+                <th scope="row">{{ forloop.counter }}</th>
+                <td><a href="#">{{ crash.fname }}</a></td>
+                <td>{{ crash.len }}</td>
+                <td>{{ crash.describe }}</td>
+                <td>{{ crash.time }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+<div class="tableItem" style="display: none;">
+    <h4>表：virgin_bits</h4>
+    <table class="table table-active table-hover dataTables-example">
+        <thead class="thead-light">
+            <tr>
+                <th scope="col">#</th>
+                <th scope="col">bitmap</th>
+                <th scope="col">time</th>
+                <th scope="col">flag</th>
+            </tr>
+
+        </thead>
+        <tbody>
+        {% for bitsItem in virgin_bits %}
+            <tr>
+                <th scope="row">{{ forloop.counter }}</th>
+                <td><a href="#">下载</a></td>
+                <td>{{ bitsItem.time }}</td>
+                <td>{{ bitsItem.flag }}</td>
+            </tr>
+
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+<div class="tableItem" style="display: none;">
+    <h4>表：virgin_crash</h4>
+    <table class="table table-active table-hover dataTables-example">
+        <thead class="thead-light">
+            <tr>
+                <th scope="col">#</th>
+                <th scope="col">bitmap</th>
+                <th scope="col">time</th>
+                <th scope="col">flag</th>
+            </tr>
+
+        </thead>
+        <tbody>
+        {% for crashItem in virgin_crash %}
+            <tr>
+                <th scope="row">{{ forloop.counter }}</th>
+                <td><a href="#">下载</a></td>
+                <td>{{ crashItem.time }}</td>
+                <td>{{ crashItem.flag }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+<div class="tableItem" style="display: none;">
+    <h4>表：virgin_tmout</h4>
+    <table class="table table-active table-hover dataTables-example">
+        <thead class="thead-light">
+            <tr>
+                <th scope="col">#</th>
+                <th scope="col">bitmap</th>
+                <th scope="col">time</th>
+                <th scope="col">flag</th>
+            </tr>
+
+        </thead>
+        <tbody>
+        {% for tmoutItem in virgin_tmout %}
+            <tr>
+                <th scope="row">{{ forloop.counter }}</th>
+                <td><a href="#">下载</a></td>
+                <td>{{ tmoutItem.time }}</td>
+                <td>{{ tmoutItem.flag }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+-->
+
+<script src="../static/plugins/DataTables/jquery.dataTables.js"></script>
+<script src="../static/plugins/DataTables/datatables.js"></script>
+<script src="../static/plugins/DataTables/dataTables.bootstrap4.js"></script>
+
+<script type="text/javascript">
+    $(document).ready(function(){
+        	$(".dataTables-example").dataTable({
+        	"bPaginate" : true, //是否显示（应用）分页器
+            "bInfo" : true, //是否显示页脚信息，DataTables插件左下角显示记录数
+            "sPaginationType" : "full_numbers", //详细分页组，可以支持直接跳转到某页
+            "bSort" : true, //是否启动各个字段的排序功能
+            "aaSorting" : [[0, "asce"]], //默认的排序方式，第2列，升序排列
+            "bFilter" : true, //是否启动过滤、搜索功能
+		});
+        var db_name = getQueryString('db');
+        var col_name = getQueryString('col');
+        var tables = document.getElementsByTagName("table");
+        {#document.getElementsByClassName('h_title')[0].innerHTML="数据库："+db_name;#}
+        var tables_div = document.getElementsByClassName("tableItem");
+        for(var i=0; i<tables.length; i++){
+            if(tables[i].children[1].children[0].children.length===1){
+                tables_div[i].style.display="none";
+            }else{
+                tables_div[i].style.display="block";
+                {#tables_div[i].children[0].innerHTML=col_name;#}
+            }
+        }
+    });
+    function download(db_name, col_name, id){
+        $.ajax({
+                url:'/download/',
+                type:'post',
+                data:{
+                    "db":db_name,
+                    "col":col_name,
+                    "id":id,
+                },
+                success:function(response){
+                    {#var result = $.parseJSON(response);#}
+                    console.log(response["filename"]);
+                    window.location.href ='/static/files/'+response["filename"];
+
+                },
+                error:function (xhr) {
+                    console.error('something went wrong...');
+                }
+            })
+    }
+    function load_file(thisBtn){
+        var colname = thisBtn.parentElement.parentElement.id;
+        var filename = thisBtn.innerText;
+        $.ajax({
+                url:'/load_binary/',
+                type:'post',
+                data:{
+                    "filename":filename+'.txt',
+                    "colname":colname,
+                },
+                success:function(response){
+                    {#var result = $.parseJSON(response);#}
+                    console.log(response);
+                    {#window.open('/static/files'+response.fileName);#}
+
+                },
+                error:function (xhr) {
+                    console.error('something went wrong...');
+                }
+            })
+    }
+    function getQueryString(name){
+            var reg = new RegExp("(^|&)"+ name +"=([^&]*)(&|$)");
+            var r = window.location.search.substr(1).match(reg);
+            if(r!=null)return  unescape(r[2]);
+            return null;
+        }
+    window.onload = function(){
+        var db_name = getQueryString('db');
+        var col_name = getQueryString('col');
+
+    };
+
+    function get_databydbname(db_name, col_name){
+
+        $.ajax({
+                url:'/data_details/',
+                type:'post',
+                data:{
+                    "db_name":db_name,
+                    "col_name":col_name,
+                },
+                success:function(response){
+                    {#var result = $.parseJSON(response);#}
+                    console.log(response);
+
+
+                },
+                error:function (xhr) {
+                    console.error('something went wrong...');
+                }
+            })
+    }
+</script>
+</body>
+</html>

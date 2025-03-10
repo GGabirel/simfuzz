@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>数据库</title>
+    <link rel="stylesheet" type="text/css" href="../static/css/index.css">
+    <link rel="stylesheet" type="text/css" href="../static/css/bootstrap.css">
+    <script src="../static/js/jquery-3.3.1.js"></script>
+    <script src="../static/js/popper.min.js"></script>
+    <script src="../static/js/bootstrap.min.js"></script>
+
+    <link rel="stylesheet" type="text/css" href="../static/plugins/DataTables/datatables.css">
+</head>
+<body>
+<header class="c-header">
+    <div class="c-row">
+        <div class="column c-col-lg-5 c-col-sm-5 order-1">
+            <a class="c-header_url" href="#">pfuzz.hunter-ht.cn</a>
+        </div>
+        <div class="column c-col-lg-2 c-col-sm-2 order-2">
+            <div class="c-header_logo">Hunter.ht</div>
+        </div>
+        <div class="column c-col-lg-5 c-col-sm-5 order-3">
+            <ul class="c-mainmenu">
+                <li><a class="c-mainmenu" href="#task_relation">Databases</a></li>
+                <li><a class="c-mainmenu" href="#task_relation">Databases</a></li>
+                <li><a class="c-mainmenu" href="#task_details" >Upload</a></li>
+                <li><a class="c-mainmenu" href="#task_relation">Back_Top</a></li>
+                <!--<li><a class="c-mainmenu--tumblr" href="http://sadmoviesmakemehappy.tumblr.com/" target="_blank">Tumblr</a></li>-->
+            </ul>
+        </div>
+    </div>
+</header>
+<div class='ipt_des'><textarea placeholder="程序描述信息..."></textarea><button onclick="saveDes()" style="margin-right: 20%">Save</button><button style="background-color:#ccd7e2;" onclick="cancle(this)">Cancle</button></div>
+<div class='ipt_des'><input placeholder="输入程序网址..."><button onclick="saveAddr()" style="margin-right: 20%">Save</button><button style="background-color:#ccd7e2;" onclick="cancle(this)">Cancle</button></div>
+
+<div class="contain">
+{#    <div class="tableItem content" id="task_relation">#}
+{#        <table class="table table-active table-hover dataTables-example" border="0" cellspacing="0" cellpadding="0">#}
+{#            <thead class="">#}
+{#                <tr>#}
+{#                    <th scope="col">程序名称</th>#}
+{#                    <th scope="col">任务名称</th>#}
+{#                    <th scope="col">crashes</th>#}
+{#                    <th scope="col">seed</th>#}
+{#                    <th scope="col">url</th>#}
+{#                    <th scope="col">描述</th>#}
+{#                    <th scope="col">编辑</th>#}
+{#                </tr>#}
+{#            </thead>#}
+{#            <tbody id="link_db">#}
+{#                <tr>#}
+{#                    <td>{{ key.who }}</td>#}
+{#                    <td>{{ key }}</td>#}
+{#                    <td rowspan="{{ value.length }}">{{ value.task_name }}</td>#}
+{#                        <td>{{ value.task_name }}</td>#}
+{#                        <td>{{ value.describe }}</td>#}
+{#                </tr>#}
+{#            </tbody>#}
+{#        </table>#}
+{#    </div>#}
+    <div class="tableItem content" id="task_details">
+        <table class="table table-active table-hover dataTables-example" border="0" cellspacing="0" cellpadding="0">
+            <thead class="">
+                <tr>
+                    <th scope="col">#</th>
+                    <th scope="col">程序</th>
+                    <th scope="col">查看</th>
+                    <th>关闭</th>
+                </tr>
+            </thead>
+            <tr>
+                    {% for item in task_relation %}
+                        <tr>
+                            <td>{{ forloop.counter }}</td>
+                            <td>{{ item }}</td>
+                            <td><button onclick="get_task_details('{{ item }}')">click</button></td>
+                            <td><button onclick="close_tasks('{{ item }}')">close</button></td>
+                        </tr>
+                        <tr  class="hide_tasks" >
+                            <td colspan="4">
+                                <table class="detail_tasks" id="{{ item }}">
+                                    <thead>
+                                        <tr>
+                                            <th>任务名称</th>
+                                            <th>crash</th>
+                                            <th>seed</th>
+                                            <th>url</th>
+                                            <th>描述</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+
+                                    </tbody>
+                                </table>
+                            </td>
+                        </tr>
+
+                    {% endfor %}
+            </tr>
+        </table>
+    </div>
+{#    <div class="tableItem content" id="task_details" style="display: none">#}
+{#        <table class="table table-active table-hover dataTables-example" border="0" cellspacing="0" cellpadding="0">#}
+{#            <thead class="">#}
+{#                <tr>#}
+{#                    <th scope="col">#</th>#}
+{#                    <th scope="col">程序名称</th>#}
+{#                    <th scope="col">任务名称</th>#}
+{#                    <th scope="col">crashes</th>#}
+{#                    <th scope="col">seed</th>#}
+{#                    <th scope="col">url</th>#}
+{#                    <th scope="col">修改url</th>#}
+{#                </tr>#}
+{#            </thead>#}
+{#            <tbody>#}
+{#            {% for record in databases %}#}
+{#                <tr  title="{{ record.describe }}">#}
+{#                    <td scope="row">{{ forloop.counter }}</td>#}
+{#                    <td>{{ record.filename }}</td>#}
+{#                    <td>{{ record.db_name }}</td>#}
+{#                    <td><a target="_blank" href="/data_details?db={{ record.db_name }}&col=crashes">{{ record.total_crash }}</a></td>#}
+{#                    <td><a target="_blank" href="/data_details?db={{ record.db_name }}&col=seed">{{ record.seed_count }}</a></td>#}
+{#                    <td><a class="address" target="_blank" href="{{ record.address }}">{{ record.address }}</a></td>#}
+{#                    <td><button title="" class="edit_1" onclick="addAddress(this)" ></button></td>#}
+{#                </tr>#}
+{##}
+{#            {% endfor %}#}
+{#            </tbody>#}
+{#        </table>#}
+{#    </div>#}
+</div>
+
+<script src="../static/plugins/DataTables/jquery.dataTables.js"></script>
+<script src="../static/plugins/DataTables/datatables.js"></script>
+<script src="../static/plugins/DataTables/dataTables.bootstrap4.js"></script>
+
+<script type="text/javascript">
+
+    // 分页
+    $(document).ready(function(){
+        	$(".dataTables-example").dataTable({
+        	"bPaginate" : true, //是否显示（应用）分页器
+            "bInfo" : true, //是否显示页脚信息，DataTables插件左下角显示记录数
+            "sPaginationType" : "full_numbers", //详细分页组，可以支持直接跳转到某页
+            "bSort" : false, //是否启动各个字段的排序功能
+            "aaSorting" : false, //默认的排序方式，第2列，升序排列
+            "bFilter" : true, //是否启动过滤、搜索功能
+		});
+        var db_name = getQueryString('db');
+        var col_name = getQueryString('col');
+        var tables = document.getElementsByTagName("table");
+        {#document.getElementsByClassName('h_title')[0].innerHTML="数据库："+db_name;#}
+        var tables_div = document.getElementsByClassName("tableItem");
+        for(var i=0; i<tables.length; i++){
+            if(tables[i].children[1].children[0].children.length===1){
+                tables_div[i].style.display="none";
+            }else{
+                tables_div[i].style.display="block";
+                {#tables_div[i].children[0].innerHTML=col_name;#}
+            }
+        }
+    });
+
+    var name_db = "";
+    var name_file ="";
+    var counter = "";
+    window.onload = function(){
+        var as=document.getElementsByTagName('a');
+        for(var i=0; i<as.length;i++){
+            as[i].title="";
+        }
+        //get_link_db();
+    };
+    function get_link_db() {
+        $.ajax({
+                url:'/get_link_db/',
+                type:'post',
+                data:{
+                },
+                success:function(response){
+                    console.log(response);
+                    var tb = '';
+                    var tr=$('#'+pgm).innerHTML;
+                    for (var key in response){
+                        tr=+'<tr>\n' +
+                            '                <td rowspan="'+response[key].length+'">'+key +'</td>\n';
+                        var val=response[key];
+                        for(var i=0;i<val.length;i++){
+                            for(var v in val[i]){
+                                console.log(v);
+                                if(v==="seed_count"){
+                                    tr+=
+                            '                    <td><a target="_blank" href="/data_details?db='+val[i]["task_name"]+'&col=seed">'+val[i][v]+'</a></td>\n';
+                                }else if(v==="total_crash"){
+                                    tr+=
+                            '                    <td><a target="_blank" href="/data_details?db='+val[i]["task_name"]+'&col=crashes">'+val[i][v]+'</a></td>\n';
+                                }else if(v==="url"){
+                                    tr+=
+                            '                    <td ><a class="address" target="_blank" href="'+val[i][v]+'">'+val[i][v]+'</a><button class="edit_1" onclick="addAddress(this)" ></td>\n';
+                                }else{
+                                    tr+=
+                            '                    <td class="'+key+'">'+val[i][v]+'</td>\n';
+                                }
+
+                            }
+                            tr+='<td><button title="" class="edit_2" onclick="addDescription(this)"></button></td></tr>';
+                        }
+                        tr+='</tr>';
+                        tb+=tr;
+                    }
+                    document.getElementById('link_db').innerHTML=tb;
+
+                },
+                error:function (xhr) {
+                    console.error('something went wrong...');
+                }
+            })
+    }
+    function close_tasks(pgm) {
+        $('#'+pgm).parents('td').parents('tr').addClass('hide_tasks');
+    }
+    function get_task_details(pgm){
+        console.log(pgm);
+        $('#'+pgm).parents('td').parents('tr').removeClass('hide_tasks');
+        $.ajax({
+                url:'/get_task_details/',
+                type:'post',
+                data:{
+                    'program_name':pgm,
+                },
+                success:function(response){
+                    console.log(response);
+                    var tb = '';
+                    for (var key in response){
+                        var tr='';
+                        var val=response[key];
+                        for(var i=0;i<val.length;i++){
+                            tr+=
+                            '                    <td>'+key+'</td>\n';
+                            for(var v in val[i]){
+                                console.log(v);
+                                if(v==="seed_count"){
+                                    tr+=
+                            '                    <td><a target="_blank" href="/data_details?db='+key+'&col=seed">'+val[i][v]+'</a></td>\n';
+                                }else if(v==="total_crash"){
+                                    tr+=
+                            '                    <td><a target="_blank" href="/data_details?db='+key+'&col=crashes">'+val[i][v]+'</a></td>\n';
+                                }else if(v==="url"){
+                                    tr+=
+                            '                    <td><a class="address" target="_blank" href="'+val[i][v]+'">'+val[i][v]+'</a></td>\n';
+                                }else{
+                                    tr+=
+                            '                    <td class="'+key+'">'+val[i][v]+'</td>\n';
+                                }
+
+                            }
+                        }
+                        tr+='</tr>';
+                        tb+=tr;
+                    }
+                    document.getElementById(pgm).children[1].innerHTML=tb;
+
+                },
+                error:function (xhr,status,error) {
+                    console.error('something went wrong...');
+                    console.error(xhr);
+                    console.error(status);
+                    console.error(error);
+                }
+            })
+    }
+    function showDes(thisBtn) {
+        console.log(thisBtn.parentElement.parentElement.nextElementSibling);
+        $(thisBtn.parentElement.parentElement.nextElementSibling).addClass('slid_show_tr');
+    }
+    function addDescription(thisBtn){
+        var ipt = document.getElementsByClassName('ipt_des')[0];
+        $(ipt).addClass('show_top');
+        var cur_des = thisBtn.parentElement.previousElementSibling.innerHTML.toString();
+        console.log(cur_des);
+        if(cur_des!=="暂无描述信息"){
+            ipt.children[0].value=cur_des;
+        }
+        counter = thisBtn.parentElement.previousElementSibling;
+        name_db = thisBtn.parentElement.previousElementSibling.previousElementSibling.previousElementSibling.previousElementSibling.previousElementSibling;
+        name_file = counter.className.toString();
+        name_db = name_db.innerHTML.trim();
+        console.log(name_db+name_file);
+
+    }
+    function addAddress(thisBtn) {
+        var ipt = document.getElementsByClassName('ipt_des')[1];
+        $(ipt).addClass('show_top');
+        name_db = thisBtn.parentElement.previousElementSibling.previousElementSibling.previousElementSibling;
+        name_file = name_db.className.toString();
+        name_db = name_db.innerHTML.trim();
+        counter = thisBtn.previousElementSibling;
+    }
+    function cancle(thisBtn){
+        $(thisBtn.parentElement).removeClass('show_top');
+    }
+    function saveDes() {
+        var ipt = document.getElementsByClassName('ipt_des')[0];
+        $(ipt).removeClass('show_top');
+        var db_name = name_db;
+        var filename = name_file;
+        console.log("filename"+filename);
+        filename = name_file;
+        var describe = document.getElementsByClassName('ipt_des')[0].children[0].value;
+        if(describe!==""){
+            $.ajax({
+                url:'/update_linkdb_des/',
+                type:'post',
+                data:{
+                    'db_name':db_name,
+                    'filename':filename,
+                    'describe':describe,
+                },
+                success:function(response){
+                    console.log(response);
+                    console.log(describe);
+                    counter.innerHTML=describe;
+
+                },
+                error:function (xhr) {
+                    console.error('something went wrong...');
+                }
+            })
+        }
+    }
+    function saveAddr(){
+        var ipt = document.getElementsByClassName('ipt_des')[1];
+        $(ipt).removeClass("show_top");
+        var db_name = name_db;
+        var filename = name_file;
+        console.log(filename);
+        var address = document.getElementsByClassName('ipt_des')[1].children[0].value;
+        if(address!==""){
+            $.ajax({
+                url:'/update_addr/',
+                type:'post',
+                data:{
+                    'db_name':db_name,
+                    'filename':filename,
+                    'address':address,
+                },
+                success:function(response){
+                    console.log(response);
+                    counter.innerHTML = '<a class="address" target="_blank" href="'+
+                        address+'" title="">'+address+'</a>';
+                },
+                error:function (xhr) {
+                    console.error('something went wrong...');
+                }
+            })
+        }
+
+    }
+    function chose_db(thisBtn){
+        var db_list = thisBtn.parentElement.children;
+        for(var i=0; i<db_list.length;i++){
+            if(db_list[i].className==='active_li'){
+                db_list[i].className="";
+            }
+        }
+        thisBtn.className = "active_li";
+        var db_name = thisBtn.innerText.trim();
+        get_db_data(db_name);
+    }
+    function to_details(thisBtn){
+        var storage = window.sessionStorage;
+
+        var db= get_db_name();
+        var col= thisBtn.innerText.trim();
+        window.location.href = '/data_details/?db='+db+'&col='+col;
+    }
+    function get_db_name() {
+        var db_list = document.getElementById('db_list').children;
+        for(var i=0; i<db_list.length;i++){
+            if(db_list[i].className==='active_li'){
+                return db_list[i].innerText.trim();
+            }
+        }
+    }
+    function refresh_data(){
+        var db_name = get_db_name();
+        get_db_data(db_name);
+    }
+    function get_db_data(db_name){
+        $.ajax({
+                url:'/index/',
+                type:'post',
+                data:{
+                    'db_name':db_name,
+                },
+                success:function(response){
+                    console.log(response["total_crash"]);
+                    console.log(response["seed_count"]);
+                    var spans = document.getElementsByClassName("task_cnt")[0].children;
+                    spans[0].innerHTML="文件名称:"+response["filename"];
+                    if(response["total_crash"]==='0'){
+                        spans[3].innerHTML='crashes: 0'
+                    }else{
+                        spans[3].innerHTML='crashes: '+'<a target="_blank" href="/data_details?db='+db_name+'&col=crashes">'+response["total_crash"]+'</a>'+'</a>';
+                    }
+                    spans[2].innerHTML = response["describe"];
+                    spans[4].innerHTML='seed: '+'<a target="_blank" href="/data_details?db='+db_name+'&col=seed">'+response["seed_count"]+'</a>'+'</a>';
+                    spans[6].innerHTML = response["address"];
+                },
+                error:function (xhr) {
+                    console.error('something went wrong...');
+                }
+            })
+    }
+</script>
+</body>
+</html>

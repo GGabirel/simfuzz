@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>download</title>
+    <script src="../static/js/jquery-3.3.1.js"></script>
+</head>
+<body>
+<div id="filename">{{ filename }}</div>
+</body>
+<script type="text/javascript">
+    window.onload = function(){
+        var filename = '/static/files/'+document.getElementById('filename').innerText;
+        window.open(filename);
+    }
+</script>
+</html>

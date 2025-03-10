@@ -1,0 +1,1101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+{#    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">#}
+    <title>UniFuzz</title>
+    <link rel="stylesheet" href="../static/plugins/bootstrap-3.3.7/dist/css/bootstrap.css">
+    <link rel="stylesheet" href="../static/plugins/BootstrapTable/bootstrap-table.css">
+    <link rel="stylesheet" href="../static/plugins/bootstrap-3.3.7/dist/css/bootstrap-editable.css">
+</head>
+<style type="text/css">
+    *{
+        margin:0;
+        padding:0;
+        font-family: 'Helvetica';
+        font-size:12px;
+    }
+    input[type="search"]{
+        border:solid 1px #e6e6e6;
+        font-size:10px;
+        border-radius:20px !important;
+        height:30px;
+        padding:0 15px;
+        box-shadow:none;
+        background-color:#f4f8fb;
+    }
+    input[type="number"]{
+        width:50px;
+        font-size:10px;
+        height:30px;
+    }
+    .page-jump-to{
+        width: 130px;
+        float: right;
+    }
+    .btn{
+        padding:5px 12px 6px 12px !important;
+        font-size:10px;
+    }
+    .pagination-info{
+        display: none;
+    }
+    .search{
+       width:30%;
+    }
+    .fixed-table-toolbar{
+        box-shadow:5px 0 10px #e7ecf2;
+        padding-right:30px;
+        margin-bottom:20px;
+    }
+    .fixed-table-container{
+        box-shadow:5px 0 10px #e7ecf2;
+        padding-left:20px;
+    }
+    .fixed-table-pagination{
+        padding:0 30px;
+        font-weight: 400;
+    }
+    .table-bordered{
+        border:none;
+    }
+    .detail-view .fixed-table-toolbar{
+        box-shadow: none;
+        padding-right:0px;
+        margin-bottom:5px;
+    }
+    .detail-view .fixed-table-pagination{
+        font-weight:normal;
+    }
+    .detail-view input[type="search"]{
+        height:25px;
+        padding:0 18px;
+        border-radius:0;
+    }
+    .detail-view .search{
+        width:20%;
+        margin:2px !important;
+    }
+
+    .table-bordered > thead > tr > th,
+    .table-bordered > thead > tr > td,
+    .table-bordered > tbody > tr > td{
+        border-color: #f3f3f3;
+        font-weight: 300;
+        border-bottom-width:1px;
+    }
+
+    .detail-view .table-bordered > thead > tr > th,
+    .detail-view .table-bordered > thead > tr > td,
+    .detail-view .table-bordered > tbody > tr > td{
+        font-weight: normal;
+    }
+    a{
+        color:#6c87a1;
+    }
+    a, a:hover{
+        text-decoration: none;
+    }
+    html,body, .wrap{
+        width:100%;
+        height:100%;
+        background-color:#fdfdfd;
+    }
+    .bar_left{
+        width:10%;
+        box-shadow: 5px 0 10px #e7ecf2;
+        background-color:white;
+    }
+    .wrap_right{
+        width:90%;
+    }
+    .bar_left, .wrap_right{
+        height:100%;
+        float: left;
+    }
+    .logo_wrap{
+        width:100%;
+        height:20%;
+        padding-top:20px;
+    }
+    .logo{
+        width:95%;
+        height:100%;
+        margin:0 auto;
+        background-image: url("../static/img/logo.png") ;
+        background-size: 10% auto;
+        background-repeat: no-repeat;
+        background-attachment: fixed;
+    }
+    .tags{
+        width:100%;
+        height:70%;
+    }
+    .tag_list{
+        width:100%;
+        height:100%;
+        margin: 20px auto;
+    }
+
+    .wrap_tb, .wrap_chart{
+        float:left;
+        height:100%;
+    }
+    .wrap_tb{
+        width:70%;
+    }
+    .wrap_chart{
+        width: 27%;
+        height: 98%;
+        margin: 0 1% 1% 1%;
+        padding-left: 10px;
+        padding-right: 10px;
+        background-color: #fdfdfd;
+        -webkit-box-shadow: -3px 0 10px #e7ecf2;
+        -moz-box-shadow: -3px 0 10px #e7ecf2;
+        box-shadow: 0 0 10px #e7ecf2;
+    }
+    .table_middle{
+        padding:0 15px 0 0;
+    }
+    .tag_item{
+        height:20px;
+        line-height:20px;
+        text-align: center;
+        cursor: pointer;
+    }
+    .tag_item:hover{
+    }
+    .tag_item>a, .tag_item>span{
+        text-align: center;
+        font-size:10px;
+    }
+    .tag_active{
+        color:#929292;
+    }
+
+    .text_wrap{
+		width:100%;
+        height:20%;
+        padding-top:15px;
+	}
+	.text_box{
+		width:25%;
+		float: left;
+	}
+
+	.text_box > span {
+		width:100%;
+		display: block;
+        padding-left:5px;
+		text-align: left;
+		font-family: 'Euphemia UCAS';
+	}
+
+	.text_name{
+		font-size:10px;
+	}
+	.text_num{
+		font-size:18px;
+	}
+
+    .text_l{
+        text-align: left;
+        top:0;
+        left:0;
+    }
+    .text-r{
+        text-align:right;
+        bottom:0;
+        right:0;
+    }
+    .line_center{
+        width:95%;
+        height:40%;
+        padding-left:10px;
+        position:relative;
+    }
+    #line_dynamic{
+        width:100%;
+        height:90%;
+        position:absolute;
+        right:0;
+        bottom:5%;
+    }
+    .number_div{
+		width:100%;
+		height:50px;
+        position:absolute;
+	}
+	.number_div > span{
+		display: block;
+	}
+    .axis-name{
+		font-size:10px;
+		font-weight: bold;
+	}
+
+    .pie_bottom{
+		height:30%;
+	}
+	.pie_item{
+		display: block;
+		width:50%;
+        float: left;
+		height:100%;
+		text-align: center;
+		position: relative;
+	}
+	.pie_item >div{
+		width:100%;
+		height:100%;
+	}
+	.pie_item > span{
+		display: block;
+		width:100%;
+		font-family: 'Helvetica';
+
+	}
+	.pie + span {
+		position: absolute;
+		bottom:20px;
+	}
+	.pie + span + span {
+		position: absolute;
+		bottom:0;
+	}
+	.pie_item > span{
+		font-size:14px;
+		font-weight: bold;
+	}
+
+	.pie_item > span:last-child{
+		font-size:10px;
+		font-weight: lighter;
+		bottom:0;
+	}
+
+    .popover{
+        border:none;
+    }
+    .popover-title{
+        font-size:10px;
+    }
+
+    @media (max-width: 500px){
+        .text_box{
+            width:50%;
+            float: left;
+	    }
+        .pie_item{
+            width:50%;
+        }
+    }
+
+</style>
+<body>
+    <div class="wrap">
+        <div class="bar_left">
+            <div class="logo_wrap">
+                <div class="logo">
+
+                </div>
+            </div>
+            <div class="tags">
+                <div class="tag_list">
+                    <div class="tag_item">
+                        <a href="#">
+                            <span class="glyphicon glyphicon-tasks"></span>
+                        </a>
+                        <span class="tag_active">任务列表</span>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+        <div class="wrap_right">
+            <div class="wrap_tb">
+                <div class="table_middle">
+                    <table id="tb-Program">
+
+                    </table>
+                </div>
+            </div>
+            <div class="wrap_chart" style="display:none">
+                <div class="text_wrap">
+                    <div class="text_box">
+                        <span class="text_num">1</span>
+                        <span class="text_name">Crashes</span>
+                    </div>
+                    <div class="text_box">
+                        <span class="text_num">234</span>
+                        <span class="text_name">Cycle done</span>
+                    </div>
+                    <div class="text_box">
+                        <span class="text_num">5678</span>
+                        <span class="text_name">Total execs</span>
+                    </div>
+                    <div class="text_box">
+                        <span class="text_num">910</span>
+                        <span class="text_name">Exec speed</span>
+                    </div>
+                </div>
+                <div class="line_center">
+                    <div class="number_div text-l">
+                        <span id="count_seed">0</span>
+                        <span class="axis-name">seeds</span>
+                    </div>
+                    <div id="line_dynamic" class="">
+
+                    </div>
+                    <div class="number_div text-r">
+                        <span class="axis-name">time</span>
+                        <span id="count_time">0</span>
+                    </div>
+                </div>
+                <div class="pie_bottom">
+                    <div class="pie_item" style="display: none">
+                        <div class="pie" id="pie_one"></div>
+                        <span>Edges</span>
+                        <span>34/234</span>
+                    </div>
+                    <div class="pie_item" >
+                        <div class="pie" id="pie_two"></div>
+                        <span>Functions</span>
+                        <span>34/234</span>
+                    </div>
+                    <div class="pie_item">
+                        <div class="pie" id="pie_three"></div>
+                        <span>Branches</span>
+                        <span>34/234</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        </div>
+    </div>
+
+    <script src="../static/js/jquery-3.3.1.js" type="text/javascript"></script>
+    <script src="../static/js/popper.min.js" type="text/javascript"></script>
+    <script src="../static/plugins/bootstrap-3.3.7/dist/js/bootstrap.js" type="text/javascript" ></script>
+    <script src="../static/plugins/BootstrapTable/bootstrap-table.js" type="text/javascript"></script>
+    <script src="../static/plugins/BootstrapTable/locale/bootstrap-table-zh-CN.js" type="text/javascript"></script>
+
+    <script src="../static/plugins/BootstrapTable/jquery.base64.js" type="text/javascript"></script>
+    <script src="../static/plugins/BootstrapTable/extensions/export/bootstrap-table-export.min.js"></script>
+    <script src="../static/plugins/BootstrapTable/tableExport.js"></script>
+
+    <script src="../static/plugins/BootstrapTable/extensions/editable/bootstrap-table-editable.min.js"></script>
+    <script src="../static/plugins/bootstrap-3.3.7/dist/js/bootstrap-editable.js"></script>
+    <script src="../static/plugins/BootstrapTable/extensions/page-jump-to/bootstrap-table-page-jump-to.js"></script>
+
+    <script type="text/javascript" src="../static/js/echarts.min.js"></script>
+
+<script type="text/javascript">
+
+	//根id
+	var mRootId = '0';
+	var timer_pie, timer_line;
+
+	$(function (){
+		//初始化表格数据 传递根id
+		createTableProgram(mRootId);
+	});
+
+	//表格数据递归使用初始化表格方法 tableObj 当前生成的table绑定的对象
+	function createTableProgram(pid, tableObj){
+		var isSearch = false;
+
+		if (!tableObj) {
+			tableObj = "#tb-Program";
+			isSearch = true;
+		}
+
+		//根据窗口调整表格高度
+		$(window).resize(function(){
+			$(tableObj).bootstrapTable('resetView', {
+				height:tableHeight()
+			});
+		});
+
+		//table 参数配置
+		// var dataList = "[{'name':'程序名称','tasksNum':'任务数量',	'crashesNum':'crashes数量','operation':'操作'	},{		'name':'程序名称','tasksNum':'任务数量','crashesNum':'crashes数量','operation':'操作'}]";
+		{#var dataList = '[{"dataList":[{"name":"程序名称","tasksNum":"任务数量",	"crashesNum":"crashes数量","operation":"操作"}]}';#}
+		$(tableObj).bootstrapTable({
+			url:"/get_programs_list/",
+			dataField: "dataList",
+			search: isSearch,
+			pagination:true,
+            method:"POST",
+            sidePagination:"client",
+            pageSize:15,
+            pageList:[15, 20, 30],
+            showButtonIcons:true,
+            showToggle:false,
+            idField:'name',
+            locale:"zh-CN", //中文支持
+            showJumpTo:true,
+			columns: [
+				{
+					title: "程序名称",
+					field: "name",
+					sortable:true,
+					align:"center",
+					order:"desc",
+				},
+				{
+					title: "任务数量",
+					field: "tasksNum",
+					sortable:false,
+					align:"center",
+				},
+				{
+					title: "下载地址（点击可编辑）",
+					field: "url",
+					sortable:false,
+					align:"left",
+                    editable:{
+					    type:'text',
+                        title:'修改下载地址',
+                        validate:function(v){
+					        if(!v) return '无提交内容';
+                        }
+                    }
+				},
+				{
+					title: "操作",
+					field: "operation",
+					sortable:false,
+                    align:"center",
+					formatter: function (value, row, index) {
+                        return '<a href="javascript:void(0)" title="删除">' +
+                            '<i class="glyphicon glyphicon-trash text-danger"></i> ' +
+                            '</a>';
+                        },
+                        events: {
+                            'click a[title=删除]': function (e, value, row, index) {
+                                if(confirm('此操作不可逆，请确认是否删除？')){
+                                    $.ajax({
+                                        url:'/delete_programs/',
+                                        method:'POST',
+                                        data:row,
+                                        success:function(data, status){
+                                            console.log(value+':value');
+                                            if(status === 'success'){
+                                                alert("删除成功");
+                                                $(tableObj).bootstrapTable('remove',{
+                                                    field:'name',
+                                                    values:row.name
+                                                });
+                                            }
+                                        },
+                                        error:function(){
+                                            alert('删除失败');
+                                        }
+                                    });
+                                }
+                            },
+
+                        }
+				},
+			],
+            detailView:true,
+            detailViewIcon:true,
+            detailViewAlign:"center",
+            onExpandRow: function (index, row, $detail) {
+				//点击左侧的加号 展开查看详情的时候调用  在这里做了递归调用自身再次构建一张表   这里的child-table-row.id是为了修改或者删除，刷新子表使用
+                InitSubTable(index, row, $detail);
+                {#createTableProgram(row.id, $detail.html('<table class="child-table child-table-' + row.id + '" style=""></table>').find('table'));#}
+            },
+            onEditableSave:function(field, row, oldValue, $el){
+                    row['program_name']=row.name;
+                    var post_url ='/update_addr/';
+                    $.ajax({
+                        url:post_url,
+                        method:'POST',
+                        data:row,
+                        success:function(data, status){
+                            if(status === 'success'){
+                                alert("修改成功");
+                            }
+                        },
+                        error:function(){
+                            alert('修改失败');
+                        }
+                    });
+                },
+
+            responseHandler: function (res) {
+				//请求返回数据成功会调用该方法/填充表格数据之前会调用这个方法
+                $.each(res.dataList, function (index, item) {
+
+                });
+
+                return res;
+            },
+            onClickRow: function (row, $element) {
+                //$element是当前tr的jquery对象
+                //单击row事件
+            },
+            onLoadSuccess: function (data) {
+            },
+
+		});
+
+		InitSubTable = function (index, row, $detail) {
+            var parentname = row.name;
+            console.log(row.name);
+            var cur_table = $detail.html('<table></table>').find('table');
+            $(cur_table).bootstrapTable({
+                url: '/get_task_list/',
+                method: 'GET',
+                dataField:"row",
+                search:true,
+                queryParams: { name: parentname },
+			    pagination:true,
+                sidePagination:"client",
+                pageSize:5,
+                pageList:[5, 10, 15],
+                showButtonIcons:true,
+                showJumpTo:true,
+                locale:"zh-CN", //中文支持
+                columns: [{
+					title: "任务名称",
+					field: "task_name",
+					sortable:true,
+					align:"center",
+					order:"desc"
+				}, {
+					title: "crash数量",
+					field: "crashesNum",
+					sortable:false,
+					align:"center",
+					order:"desc"
+				}, {
+					title: "seed数量",
+					field: "seedsNum",
+					sortable:false,
+					align:"center",
+					order:"desc",
+				},{
+					title: "备注",
+					field: "describe",
+					align:"left",
+                    editable:{
+					    type:'text',
+                        title:'备注',
+                        validate:function(v){
+					        if(!v) return '无提交内容';
+                        },
+                    }
+				}, {
+					title: "操作",
+					field: "operation",
+					sortable:false,
+                    align:"center",
+					formatter: function (value, row, index) {
+                        return '<a href="javascript:void(0)" title="查看">' +
+                            '<i class="glyphicon glyphicon-eye-open" ></i> ' +
+                            '</a>'+
+                            '<a href="javascript:void(0)" style="display:none" title="删除">' +
+                            '<i class="glyphicon glyphicon-trash text-danger"></i> ' +
+                            '</a>';
+                        },
+                        events: {
+                            'click a[title=删除]': function (e, value, row, index) {
+                                if(confirm('此操作不可逆，请确认是否删除？')){
+                                    $.ajax({
+                                        url:'/delete_tasks/',
+                                        method:'POST',
+                                        data:row,
+                                        success:function(data, status){
+                                            console.log(value+':value');
+                                            if(status === 'success'){
+                                                alert("删除成功");
+                                                $(cur_table).bootstrapTable('remove',{
+                                                    field:'task_id',
+                                                    values:row.task_id,
+                                                });
+                                            }
+                                        },
+                                        error:function(){
+                                            alert('修改失败');
+                                        }
+                                    });
+                                }
+                            },
+                            'click a[title=查看]': function (e, value, row, index) {
+                                // e.preventDefault();
+                                    $.ajax({
+                                            url:'/get_chart_data/',
+                                            method:'POST',
+                                            data:row,
+                                            success:function(data, status){
+                                                console.log(value+':value');
+                                                if(status === 'success'){
+                                                    $('.wrap_chart').css('display','block');
+                                                    let crashes_num = row.crashesNum;
+                                                    let seeds_num = row.seedsNum;
+                                                    draw_line( crashes_num, seeds_num );
+                                                    draw_pie();
+                                                }
+                                            },
+                                            error:function(){
+                                                alert('修改失败');
+                                            }
+                                    });
+                            },
+                        }
+				}],
+
+                onEditableSave:function(field, row, oldValue, $el){
+                    row['program_name']=parentname;
+                    var post_url ='/update_linkdb_des/';
+                    if (field === 'url'){
+                        post_url ='/update_addr/';
+                    }
+                    $.ajax({
+                        url:post_url,
+                        method:'POST',
+                        data:row,
+                        success:function(data, status){
+                            if(status === 'success'){
+                                alert("修改成功");
+                            }
+                        },
+                        error:function(){
+                            alert('修改失败');
+                        }
+                    });
+                },
+            });
+        };
+	}
+
+
+
+
+
+	//设置表格的高度
+	function tableHeight() {
+		var height = $(window).height() - 120;
+		//当表格内容的高度小于外面容器的高度，容器的高度设置为内容的高度，相反时容器设置为内容的高度-160
+		if ($(".fixed-table-body trable").height() < $(".fixed-table-container").height()){
+			$(".fixed-table-container").css({"padding-bottom": "0px", height: $(".fixed-table-body table").height() + 20});
+            // 是当内容少时，使用搜索功能高度保持不变
+            height = "auto";
+        } else {
+            height = $(window).height() - 160;
+        }
+        return height;
+	}
+
+
+</script>
+
+<script type="text/javascript">
+	//仪表盘1
+
+	//填入三个饼图数据
+
+    function draw_pie(){
+        if(!timer_line){
+
+        }else{
+            clearInterval(timer_pie);
+        }
+        var pie_one_Chart = echarts.init(document.getElementById('pie_one'));
+        pie_one_Chart.clear();
+        option_pie_one={
+            tooltip: {
+            formatter: '{a} <br/> {c}%',
+
+            },
+            toolbox: {
+                feature: {
+                }
+            },
+            series: [
+            {
+                name: '当前进度',
+                type: 'gauge',
+                detail: {
+                    formatter: '{value}%',
+                    fontSize:12,
+                    color: 'auto'
+                },
+                data: [{value: 50}],
+                axisLine: {
+                    lineStyle: {
+                        width: 10,
+                        color: [
+                            [0.2, '#90c7ae'],
+                            [0.8, '#62859e'],
+                            [1, '#c2322f']
+                        ]
+                    }
+                },
+                pointer: {
+                    itemStyle: {
+                        color: 'auto'
+                    },
+                    width:2
+                },
+                axisTick: {
+                    distance:-10,
+                    length: 4,
+                    lineStyle: {
+                        color: '#fff',
+                        width: 0.5
+                    }
+                },
+                splitLine: {
+                    distance:-10,
+                    length: 10,
+                    lineStyle: {
+                        color: '#fff',
+                        width: 1
+                    }
+                },
+                axisLabel: {
+                    color: 'auto',
+                    distance: 15,
+                    fontSize: 6
+                },
+            }
+            ]
+        };
+        //饼图2
+        var pie_wrap_width = document.getElementsByClassName('pie_item')[1].clientWidth;
+        var progressWidth=12;
+        if(pie_wrap_width<100){
+            progressWidth=8;
+        }
+        var pie_two_Chart = echarts.init(document.getElementById('pie_two'));
+        pie_two_Chart.clear();
+        option_pie_two = {
+            series: [{
+                type: 'gauge',
+                startAngle:90,
+                endAngle:-270,
+                radius:'72%',
+                center: ["50%", "42%"],
+                progress: {
+                    show: true,
+                    width: progressWidth,
+                    itemStyle:{
+                        color:'#6c87a1'
+                    }
+                },
+                axisLine: {
+                    lineStyle: {
+                        width: '80%',
+                        color:[[1,'#28323b']]
+                    }
+                },
+                axisTick: {
+                    show: false
+                },
+                splitLine: {
+                    show:false
+                },
+                axisLabel: {
+                    show:false
+                },
+                pointer:{
+                    show:false
+                },
+
+                title: {
+                    show: false
+                },
+                detail: {
+                    formatter:'{value}%',
+                    valueAnimation: true,
+                    fontSize: 20,
+                    color:'#fff',
+                    offsetCenter: [0, '0%']
+                },
+                data: [{
+                    value: 50
+                }]
+            },
+            {
+                type: 'gauge',
+                startAngle:90,
+                endAngle:-270,
+                radius:'72%',
+                center: ["50%", "42%"],
+                itemStyle: {
+                    color: '#28323b',
+                },
+                progress: {
+                    show: true,
+                    width: 4
+                },
+
+                pointer: {
+                    show: false
+                },
+                axisLine: {
+                    show: false
+                },
+                axisTick: {
+                    show: false
+                },
+                splitLine: {
+                    show: false
+                },
+                axisLabel: {
+                    show: false
+                },
+                detail: {
+                    show: false
+                },
+                data: [{
+                    value: 100,
+                }]
+
+            }
+            ]
+        };
+
+        //饼图3
+        var pie_three_Chart = echarts.init(document.getElementById('pie_three'));
+        pie_three_Chart.clear();
+        option_pie_three = {
+            series: [{
+                type: 'gauge',
+                startAngle:90,
+                endAngle:-270,
+                radius:'72%',
+                center: ["50%", "42%"],
+                progress: {
+                    show: true,
+                    width: progressWidth,
+                    itemStyle:{
+                        color:'#6c87a1'
+                    }
+                },
+                axisLine: {
+                    lineStyle: {
+                        width: '80%',
+                        color:[[1,'#28323b']]
+                    }
+                },
+                axisTick: {
+                    show: false
+                },
+                splitLine: {
+                    show:false
+                },
+                axisLabel: {
+                    show:false
+                },
+                pointer:{
+                    show:false
+                },
+
+                title: {
+                    show: false
+                },
+                detail: {
+                    formatter:'{value}%',
+                    valueAnimation: true,
+                    fontSize: 20,
+                    color:'#fff',
+                    offsetCenter: [0, '0%']
+                },
+                data: [{
+                    value: 50
+                }]
+            },
+            {
+                type: 'gauge',
+                startAngle:90,
+                endAngle:-270,
+                radius:'72%',
+                center: ["50%", "42%"],
+                itemStyle: {
+                    color: '#28323b',
+                },
+                progress: {
+                    show: true,
+                    width: 4,
+                },
+
+                pointer: {
+                    show: false
+                },
+                axisLine: {
+                    show: false
+                },
+                axisTick: {
+                    show: false
+                },
+                splitLine: {
+                    show: false
+                },
+                axisLabel: {
+                    show: false
+                },
+                detail: {
+                    show: false
+                },
+                data: [{
+                    value: 100,
+                }]
+
+            }
+            ]
+        };
+        timer_pie = setInterval(function () {
+            option_pie_one.series[0].data[0].value = (Math.random() * 100).toFixed(2) - 0;
+            pie_one_Chart.setOption(option_pie_one, true);
+
+            if(option_pie_two.series[0].data[0].value>=100){
+                option_pie_two.series[0].data[0].value=0;
+            }
+            option_pie_two.series[0].data[0].value +=1;
+            pie_two_Chart.setOption(option_pie_two, true);
+
+            if(option_pie_three.series[0].data[0].value<=0){
+                option_pie_three.series[0].data[0].value=100;
+            }
+
+            option_pie_three.series[0].data[0].value -=1;
+            pie_three_Chart.setOption(option_pie_three, true);
+
+        },2000);
+
+        pie_one_Chart.setOption(option_pie_one, true);
+        pie_two_Chart.setOption(option_pie_two, true);
+        pie_three_Chart.setOption(option_pie_three, true);
+    }
+
+    function draw_line( crashesNum,seedsNum){
+        if(!timer_line){
+
+        }else{
+            clearInterval(timer_line);
+        }
+        var data=[], time=[], pointCrash=[];
+        var value = 5;
+        var t=0, count = 0;
+
+        var cycles_done = 0;
+        var total_execs = 0;
+        var exec_speed = 0;
+        // data.push(randomData());
+        function randomData(){
+            value += (Math.random()*100).toFixed(0)-0;
+            return value;
+        }
+
+        //crashes数量
+        document.getElementsByClassName('text_num')[0].innerHTML = crashesNum;
+
+        var line_Chart = echarts.init(document.getElementById('line_dynamic'));
+        line_Chart.clear();
+        option_line_dyn = {
+            toolbox: {
+                show: true,
+                feature: {
+                    magicType: {type: ['line', 'bar']},
+                    saveAsImage: {}
+                }
+            },
+            tooltip: {
+                trigger: 'axis',
+                axisPointer: {
+                    type: 'cross',
+                    animation: false,
+                },
+                // textStyle:{
+                //     color:'#000',
+                // },
+                // backgroundColor:'rgba(0,0,0,.6)',
+                // borderWidth:0
+            },
+            xAxis: {
+                axisLabel:{
+                    textStyle:{
+                        fontSize:10,
+                        color:'#313131'
+                    }
+                },
+                type: 'category',
+                boundaryGap: false,
+                data:time
+            },
+            yAxis: {
+                axisLabel:{
+                    textStyle:{
+                        fontSize:10,
+                        color:'#313131'
+                    }
+                },
+                type: 'value'
+            },
+            series: [{
+                data: data,
+                markPoint:{
+                    data:pointCrash
+                },
+                type: 'line',
+                smooth: true,
+                data:data,
+                color:'#90c7ae'
+            }]
+        };
+
+
+	    timer_line=setInterval(function(){
+            if(t>=20){
+                data=[];
+                time=[];
+                t=0;
+                count=0;
+                pointCrash=[];
+                value=0;
+            }
+            time.push(t);
+            data.push(randomData());
+
+            if(t===3||t===5||t==18){
+                count+=1;
+                pointCrash.push({
+                    name:'crash',
+                    xAxis:t,
+                    yAxis:value,
+                    itemStyle:{
+                        color:'#c2322f'
+                    },
+                    value:count
+                });
+            }
+            //填入折线图数据
+            line_Chart.setOption({series: [{
+                data: data,
+                markPoint:{data:pointCrash}
+                }],
+                xAxis:{
+                    data:time
+                }
+            });
+            //填入图表外的数据
+            document.getElementById('count_time').innerHTML=t+'s';
+            document.getElementById('count_seed').innerHTML=value;
+            document.getElementsByClassName('text_num')[1].innerHTML=Math.round(cycles_done+value/2);
+            document.getElementsByClassName('text_num')[2].innerHTML=total_execs+value*5;
+            t +=1;
+            document.getElementsByClassName('text_num')[3].innerHTML=Math.round(total_execs/t+value*5/t);
+        },1000);
+        line_Chart.setOption(option_line_dyn);
+    }
+
+</script>
+
+</body>
+</html>

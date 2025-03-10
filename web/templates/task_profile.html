@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8"></meta>
+	 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+	<title>执行进度信息</title>
+	<script type="text/javascript" src="../static/js/echarts.min.js"></script>
+</head>
+<style type="text/css">
+	*{
+		margin: 0;
+		padding: 0;
+	}
+	html, body{
+		width:100%;
+		height:100%;
+	}
+
+	.bg_color{
+		background-color: #f3f3f3;
+	}
+	.txt_col_dark{
+		color:#28323b;
+	}
+	.height_10{
+		height:100%;
+	}
+	.height_3{
+		height: 50%;
+	}
+	.height_3{
+		height:30%;
+	}
+	.height_2{
+		height:20%;
+	}
+	.height_7{
+		height:70%;
+	}
+	.width_10{
+		width:100%;
+	}
+	.width_9{
+		width:90%;
+	}
+	.width_8{
+		width: 80%;
+	}
+	.width_7{
+		width:70%;
+	}
+	.width_2{
+		width: 20%;
+	}
+	.width_3{
+		width: 30%;
+	}
+	.float_l{
+		float: left;
+	}
+	.float_r{
+		float: right;
+	}
+	.center{
+		margin: 10px auto;
+	}
+	.pie_right{
+		height:85%;
+		margin-top:5%;
+	}
+	.pie_item{
+		display: block;
+		width:100%;
+		height:33%;
+		text-align: center;
+		position: relative;
+	}
+	.pie_item >div{
+		width:100%;
+		height:100%;
+	}
+	.pie_item > span{
+		display: block;
+		width:100%;
+		font-family: 'Helvetica';
+
+	}
+	.pie + span {
+		position: absolute;
+		bottom:20px;
+	}
+	.pie + span + span {
+		position: absolute;
+		bottom:0;
+	}
+	.pie_item > span{
+		font-size:16px;
+		font-weight: bold;
+	}
+
+	.pie_item > span:last-child{
+		font-size:12px;
+		font-weight: lighter;
+		bottom:0;
+	}
+
+	.number_div{
+		width:100%;
+		height:50px;
+	}
+	.number_div > span{
+		display: block;
+	}
+	.position-rel{
+		position: relative;
+	}
+	.position-abs{
+		position: absolute;
+	}
+	.text-l{
+		top:5%;
+		left:8%;
+	}
+	.text-r{
+		bottom:0;
+		right:13%;
+	}
+	.text-l > span{
+		text-align: left;
+	}
+	.text-r > span{
+		text-align: right;
+	}
+	.axis-name{
+		font-size:14px;
+		font-weight: bold;
+	}
+	#line_dynamic{
+		top:0;
+		left:8%;
+	}
+	#count_seed{
+		font-size:24px;
+		font-family: 'copperplate';
+	}
+	#count_time{
+		font-size: 20px;
+		font-family: 'copperplate';
+	}
+	.text_wrap{
+		top:30%;
+		left:10%;
+	}
+	.text_box{
+		width:25%;
+		float: left;
+	}
+	.text_box > span {
+		width:100%;
+		display: block;
+		text-align: center;
+		font-family: 'Euphemia UCAS';
+	}
+	.text_name{
+		font-size:20px;
+	}
+	.text_num{
+		font-size:36px;
+	}
+	@media screen and (max-width: 767px){
+		.float-l, .float-r{
+		}
+		.pie_right{
+			width:100%;
+			margin:0;
+		}
+		.pie_item{
+			width:33%;
+			float: left;
+		}
+		.main_field{
+			width:100%;
+			height:70%;
+		}
+		.text_name{
+			font-size:10px;
+		}
+		.text_num{
+			font-size: 24px;
+		}
+
+	}
+</style>
+<body>
+<div class="wrap height_10 width_10 bg_color">
+	<div class="main_field height_10 width_7 float_l">
+		<div class="height_3 width_10 position-rel">
+			<div class="text_wrap width_8 height_5 position-abs">
+				<div class="text_box">
+					<span class="text_num">1</span>
+					<span class="text_name">Crashes</span>
+				</div>
+				<div class="text_box">
+					<span class="text_num">234</span>
+					<span class="text_name">Cycle done</span>
+				</div>
+				<div class="text_box">
+					<span class="text_num">5678</span>
+					<span class="text_name">Total execs</span>
+				</div>
+				<div class="text_box">
+					<span class="text_num">910</span>
+					<span class="text_name">Exec speed</span>
+				</div>
+			</div>
+		</div>
+		<div class="line_center height_7 position-rel">
+			<div class="number_div text-l position-abs">
+				<span id="count_seed">0</span>
+				<span class="axis-name">seeds</span>
+			</div>
+			<div id="line_dynamic" class="width_9 height_10 position-abs">
+				
+			</div>
+			<div class="number_div text-r position-abs">
+				<span class="axis-name">time</span>
+				<span id="count_time">0</span>
+			</div>
+		</div>
+	</div>
+	<div class="pie_right width_3 height_8 float_l">
+		<div class="pie_item">
+			<div class="pie" id="pie_one"></div>
+			<span>Edges</span>
+			<span>34/234</span>
+		</div>
+		<div class="pie_item">
+			<div class="pie" id="pie_two"></div>
+			<span>Functions</span>
+			<span>34/234</span>
+		</div>
+		<div class="pie_item">
+			<div class="pie" id="pie_three"></div>
+			<span>Branches</span>
+			<span>34/234</span>
+		</div>
+	</div>
+</div>
+
+</body>
+<script type="text/javascript">
+	//仪表盘1
+	var pie_one_Chart = echarts.init(document.getElementById('pie_one'))
+	option_pie_one={
+		tooltip: {
+       	formatter: '{a} <br/> {c}%',
+
+    	},
+   		toolbox: {
+        	feature: {
+        	}
+    	},
+    	series: [
+        {
+            name: '当前进度',
+            type: 'gauge',
+            detail: {
+            	formatter: '{value}%',
+            	fontSize:12,
+            	color: 'auto'
+            },
+            data: [{value: 50}],
+            axisLine: {
+            	lineStyle: {
+                	width: 10,
+                	color: [
+                    	[0.2, '#90c7ae'],
+                    	[0.8, '#62859e'],
+                    	[1, '#c2322f']
+                	]
+            	}
+        	},
+        	pointer: {
+            	itemStyle: {
+                	color: 'auto'
+            	},
+            	width:2
+        	},
+        	axisTick: {
+	            distance:-10,
+	            length: 4,
+	            lineStyle: {
+	                color: '#fff',
+	                width: 0.5
+	            }
+	        },
+	        splitLine: {
+	        	distance:-10,
+	            length: 10,
+	            lineStyle: {
+	                color: '#fff',
+	                width: 1
+	            }
+        	},
+        	axisLabel: {
+	            color: 'auto',
+	            distance: 15,
+	            fontSize: 6
+	        },
+        }
+   		]
+	};
+
+	//饼图2
+	var pie_two_Chart = echarts.init(document.getElementById('pie_two'))
+	option_pie_two = {
+	    series: [{
+	        type: 'gauge',
+	        startAngle:90,
+	        endAngle:-270,
+	        radius:'72%',
+	        center: ["50%", "42%"],
+	        progress: {
+	            show: true,
+	            width: 16,
+	            itemStyle:{
+	                color:'#6c87a1'
+	            }
+	        },
+	        axisLine: {
+	            lineStyle: {
+	                width: '80%',
+	                color:[[1,'#28323b']]
+	            }
+	        },
+	        axisTick: {
+	            show: false
+	        },
+	        splitLine: {
+	            show:false
+	        },
+	        axisLabel: {
+	            show:false
+	        },
+	        pointer:{
+	            show:false 
+	        },
+	        
+	        title: {
+	            show: false
+	        },
+	        detail: {
+	            formatter:'{value}%',
+	            valueAnimation: true,
+	            fontSize: 24,
+	            color:'#fff',
+	            offsetCenter: [0, '0%']
+	        },
+	        data: [{
+	            value: 50
+	        }]
+	    },
+	    {
+            type: 'gauge',
+	        startAngle:90,
+	        endAngle:-270,
+	        radius:'72%',
+	        center: ["50%", "42%"],
+            itemStyle: {
+                color: '#28323b',
+            },
+            progress: {
+                show: true,
+                width: 6
+            },
+
+            pointer: {
+                show: false
+            },
+            axisLine: {
+                show: false
+            },
+            axisTick: {
+                show: false
+            },
+            splitLine: {
+                show: false
+            },
+            axisLabel: {
+                show: false
+            },
+            detail: {
+                show: false
+            },
+            data: [{
+                value: 100,
+            }]
+
+        }
+	    ]
+	};
+
+	//饼图3
+	var pie_three_Chart = echarts.init(document.getElementById('pie_three'));
+	option_pie_three = {
+	    series: [{
+	        type: 'gauge',
+	        startAngle:90,
+	        endAngle:-270,
+	        radius:'72%',
+	        center: ["50%", "42%"],
+	        progress: {
+	            show: true,
+	            width: 16,
+	            itemStyle:{
+	                color:'#6c87a1'
+	            }
+	        },
+	        axisLine: {
+	            lineStyle: {
+	                width: '80%',
+	                color:[[1,'#28323b']]
+	            }
+	        },
+	        axisTick: {
+	            show: false
+	        },
+	        splitLine: {
+	            show:false
+	        },
+	        axisLabel: {
+	            show:false
+	        },
+	        pointer:{
+	            show:false 
+	        },
+	        
+	        title: {
+	            show: false
+	        },
+	        detail: {
+	            formatter:'{value}%',
+	            valueAnimation: true,
+	            fontSize: 24,
+	            color:'#fff',
+	            offsetCenter: [0, '0%']
+	        },
+	        data: [{
+	            value: 50
+	        }]
+	    },
+	    {
+            type: 'gauge',
+	        startAngle:90,
+	        endAngle:-270,
+	        radius:'72%',
+	        center: ["50%", "42%"],
+            itemStyle: {
+                color: '#28323b',
+            },
+            progress: {
+                show: true,
+                width: 6
+            },
+
+            pointer: {
+                show: false
+            },
+            axisLine: {
+                show: false
+            },
+            axisTick: {
+                show: false
+            },
+            splitLine: {
+                show: false
+            },
+            axisLabel: {
+                show: false
+            },
+            detail: {
+                show: false
+            },
+            data: [{
+                value: 100,
+            }]
+
+        }
+	    ]
+	};
+
+	//填入三个饼图数据
+	setInterval(function () {
+    	option_pie_one.series[0].data[0].value = (Math.random() * 100).toFixed(2) - 0;
+    	pie_one_Chart.setOption(option_pie_one, true);
+
+    	if(option_pie_two.series[0].data[0].value>=100){
+    		option_pie_two.series[0].data[0].value=0;
+    	}
+    	option_pie_two.series[0].data[0].value +=1;
+    	pie_two_Chart.setOption(option_pie_two, true);
+
+ 		if(option_pie_three.series[0].data[0].value<=0){
+    		option_pie_three.series[0].data[0].value=100;
+    	}
+
+    	option_pie_three.series[0].data[0].value -=1;
+    	pie_three_Chart.setOption(option_pie_three, true);
+
+	},2000);
+
+    pie_one_Chart.setOption(option_pie_one, true);
+    pie_two_Chart.setOption(option_pie_two, true);
+    pie_three_Chart.setOption(option_pie_three, true);
+
+	//动态折线图
+	var data=[], time=[], pointCrash=[];
+	var value = 5;
+	var t=0, count = 0;
+
+	var cycles_done = 0;
+	var total_execs = 0;
+	var exec_speed = 0;
+	// data.push(randomData());
+	function randomData(){
+		value += (Math.random()*100).toFixed(0)-0;
+		return value;
+	}
+
+	var line_Chart = echarts.init(document.getElementById('line_dynamic'));
+	option_line_dyn = {
+		toolbox: {
+	        show: true,
+	        feature: {
+	            dataView: {readOnly: false},
+	            magicType: {type: ['line', 'bar']},
+	            saveAsImage: {}
+	        }
+	    },
+	    tooltip: {
+        	trigger: 'axis',
+        	axisPointer: {
+	            type: 'cross',
+	            animation: false,
+	        },
+	        // textStyle:{
+	        //     color:'#000',
+	        // },
+	        // backgroundColor:'rgba(0,0,0,.6)',
+	        // borderWidth:0
+    	},
+	    xAxis: {
+	    	axisLabel:{
+            	textStyle:{
+                	fontSize:10,
+                	color:'#313131'
+            	}
+        	},
+	        type: 'category',
+       		boundaryGap: false,
+	        data:time
+	    },
+	    yAxis: {
+	    	axisLabel:{
+            	textStyle:{
+                	fontSize:10,
+                	color:'#313131'
+            	}
+        	},
+	        type: 'value'
+	    },
+	    series: [{
+	        data: data,
+	        markPoint:{
+	        	data:pointCrash
+	        },
+	        type: 'line',
+	        smooth: true,
+	        data:data,
+	        color:'#90c7ae'
+	    }]
+	};
+
+	setInterval(function(){
+		if(t>=20){
+			data=[];
+			time=[];
+			t=0;
+			count=0;
+			pointCrash=[];
+			value=0;
+		}
+		time.push(t);
+		data.push(randomData());
+
+		if(t===3||t===5||t==18){
+			count+=1;
+			pointCrash.push({
+				name:'crash',
+				xAxis:t,
+				yAxis:value,
+				itemStyle:{
+					color:'#c2322f'
+				},
+				value:count
+			});
+			document.getElementsByClassName('text_num')[0].innerHTML=count;
+		}
+		//填入折线图数据
+		line_Chart.setOption({series: [{
+            data: data,
+            markPoint:{data:pointCrash}
+        	}],
+        	xAxis:{
+        		data:time
+        	}
+        });
+        //填入图表外的数据
+        document.getElementById('count_time').innerHTML=t+'s';
+        document.getElementById('count_seed').innerHTML=value;
+        document.getElementsByClassName('text_num')[1].innerHTML=Math.round(cycles_done+value/2);
+        document.getElementsByClassName('text_num')[2].innerHTML=total_execs+value*5;
+		t +=1;
+        document.getElementsByClassName('text_num')[3].innerHTML=Math.round(total_execs/t+value*5/t);
+	},1000);
+	line_Chart.setOption(option_line_dyn);
+
+
+
+
+</script>
+</html>
