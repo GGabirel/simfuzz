@@ -61,6 +61,7 @@
 #include <sys/select.h>
 #include <netinet/in.h>
 #include <pthread.h>
+#include <immintrin.h>
 #include "data-engine-ext.h"
 
 
@@ -288,6 +289,8 @@ struct queue_entry {
       fs_redundant;                   /* Marked as redundant in the fs?   */
 
   u32 bitmap_size,                    /* Number of bits set in bitmap     */
+      cluster_id,                     /* Corresponding cluster index      */
+      fuzzer_id,                      /* Corresponding fuzzer index       */
       exec_cksum;                     /* Checksum of the execution trace  */
 
   u64 exec_us,                        /* Execution time (us)              */
@@ -808,6 +811,162 @@ static void mark_as_variable(struct queue_entry* q) {
 
 }
 
+// incremental DBSCAN
+
+u32 next_cluster_id = 1;          // 全局新簇编号生成器
+// 假设阈值和最小邻居数的定义
+#define EPSILON 0.2       // Jaccard距离阈值（示例值，根据需要调整）
+#define MIN_PTS 3         // 最小邻居数
+
+static inline double jaccard_distance(const u8* trace1, const u8* trace2) {
+  u64 diff = 0, unionn = 0;
+  const int bytes = 8192;  // 65536 bit = 8192 byte
+  for (int i = 0; i < bytes; i += 32) {
+      __m256i a = _mm256_loadu_si256((const __m256i*)(trace1 + i));
+      __m256i b = _mm256_loadu_si256((const __m256i*)(trace2 + i));
+
+      __m256i xor_val = _mm256_xor_si256(a, b);
+      __m256i or_val  = _mm256_or_si256(a, b);
+
+      // 将256位数据拆分为4个64位整数
+      u64 xor_arr[4], or_arr[4];
+      _mm256_storeu_si256((__m256i*)xor_arr, xor_val);
+      _mm256_storeu_si256((__m256i*)or_arr, or_val);
+
+      for (int j = 0; j < 4; j++) {
+          diff  += __builtin_popcountll(xor_arr[j]);
+          unionn += __builtin_popcountll(or_arr[j]);
+      }
+  }
+  if (unionn == 0)
+      unionn = 1;
+  return (double)diff / unionn;
+}
+
+// 用于合并簇的函数（此处简单示例：遍历整个队列，将 cluster 旧id 更新为新的）
+void merge_clusters(u32 target_id, u32 merge_id) {
+  struct queue_entry* q = queue;
+  while (q) {
+      if (q->cluster_id == merge_id)
+          q->cluster_id = target_id;
+      q = q->next;
+  }
+}
+
+// 新簇编号生成器
+u32 get_new_cluster_id() {
+  return next_cluster_id++;
+}
+
+
+void incremental_dbscan() {
+  // 使用全局变量 queue_top 作为新加入的样本 seed
+  struct queue_entry* seed = queue_top;
+  if (!seed) return;  // 若队列为空，直接返回
+
+  // seed->cluster_id 应该已初始化为 0（噪声）
+  
+  // 保存 seed 的邻居集合（动态数组模拟）
+  struct queue_entry** neighbors = NULL;
+  size_t n_neighbors = 0, neighbors_cap = 0;
+  
+  // 遍历整个队列，从队列头开始，到队尾之前（跳过队尾，即 seed 自身）
+  for (struct queue_entry* q = queue; q->next != NULL; q = q->next) {
+      double dist = jaccard_distance(seed->trace_mini, q->trace_mini);
+      if (dist <= EPSILON) {
+          if (n_neighbors >= neighbors_cap) {
+              neighbors_cap = (neighbors_cap == 0) ? 16 : neighbors_cap * 2;
+              neighbors = (struct queue_entry**)realloc(neighbors, neighbors_cap * sizeof(struct queue_entry*));
+          }
+          neighbors[n_neighbors++] = q;
+      }
+  }
+  
+  // 如果邻居数量不足，则 seed 仍保持噪声状态
+  if (n_neighbors < MIN_PTS) {
+      free(neighbors);
+      return;
+  }
+  
+  // seed 被判定为核心点，需要归入某个簇
+  // 检查邻居中是否已有非0的 cluster_id
+  u32 chosen_cluster = 0;
+  for (size_t i = 0; i < n_neighbors; i++) {
+      if (neighbors[i]->cluster_id != 0) {
+          chosen_cluster = neighbors[i]->cluster_id;
+          break;
+      }
+  }
+  
+  // 若邻居中没有已有簇，新建一个簇
+  if (chosen_cluster == 0)
+      chosen_cluster = get_new_cluster_id();
+  
+  // 将 seed 归入该簇
+  seed->cluster_id = chosen_cluster;
+  
+  // 建立扩展队列，存放待扩展的样本
+  struct queue_entry** expansion_queue = NULL;
+  size_t n_exp = 0, exp_cap = 0;
+  
+  // 对 seed 的邻居进行初步处理：
+  // 若邻居未归类，则归入当前簇并加入扩展队列；
+  // 若邻居已归类但属于不同簇，则合并簇
+  for (size_t i = 0; i < n_neighbors; i++) {
+      if (neighbors[i]->cluster_id == 0) {
+          neighbors[i]->cluster_id = chosen_cluster;
+          if (n_exp >= exp_cap) {
+              exp_cap = (exp_cap == 0) ? 16 : exp_cap * 2;
+              expansion_queue = (struct queue_entry**)realloc(expansion_queue, exp_cap * sizeof(struct queue_entry*));
+          }
+          expansion_queue[n_exp++] = neighbors[i];
+      } else if (neighbors[i]->cluster_id != chosen_cluster) {
+          merge_clusters(chosen_cluster, neighbors[i]->cluster_id);
+      }
+  }
+  
+  free(neighbors);
+  
+  // 扩展过程：遍历扩展队列中每个样本，检查并扩展其邻域
+  for (size_t idx = 0; idx < n_exp; idx++) {
+      struct queue_entry* current = expansion_queue[idx];
+      
+      struct queue_entry** cur_neighbors = NULL;
+      size_t n_cur = 0, cur_cap = 0;
+      
+      // 同样，从队列头开始遍历，跳过队尾
+      for (struct queue_entry* q = queue; q->next != NULL; q = q->next) {
+          double d = jaccard_distance(current->trace_mini, q->trace_mini);
+          if (d <= EPSILON) {
+              if (n_cur >= cur_cap) {
+                  cur_cap = (cur_cap == 0) ? 16 : cur_cap * 2;
+                  cur_neighbors = (struct queue_entry**)realloc(cur_neighbors, cur_cap * sizeof(struct queue_entry*));
+              }
+              cur_neighbors[n_cur++] = q;
+          }
+      }
+      
+      // 如果 current 的邻居数满足核心点要求，则扩展簇
+      if (n_cur >= MIN_PTS) {
+          for (size_t i = 0; i < n_cur; i++) {
+              if (cur_neighbors[i]->cluster_id == 0) {
+                  cur_neighbors[i]->cluster_id = chosen_cluster;
+                  if (n_exp >= exp_cap) {
+                      exp_cap = (exp_cap == 0) ? 16 : exp_cap * 2;
+                      expansion_queue = (struct queue_entry**)realloc(expansion_queue, exp_cap * sizeof(struct queue_entry*));
+                  }
+                  expansion_queue[n_exp++] = cur_neighbors[i];
+              } else if (cur_neighbors[i]->cluster_id != chosen_cluster) {
+                  merge_clusters(chosen_cluster, cur_neighbors[i]->cluster_id);
+              }
+          }
+      }
+      
+      free(cur_neighbors);
+  }
+  
+  free(expansion_queue);
+}
 
 /* Append new test case to the queue. */
 
@@ -1427,8 +1586,8 @@ static void update_bitmap_score(struct queue_entry* q) {
             previous winner, discard its trace_bits[] if necessary. */
 
          if (!--top_rated[i]->tc_ref) {
-           ck_free(top_rated[i]->trace_mini);
-           top_rated[i]->trace_mini = 0;
+          //  ck_free(top_rated[i]->trace_mini);
+          //  top_rated[i]->trace_mini = 0;
          }
 
        }
@@ -2820,6 +2979,9 @@ static u8 calibrate_case(char** argv, struct queue_entry* q, u8* use_mem,
   /* OK, let's collect some stats about the performance of this test case.
      This is used for fuzzing air time calculations in calculate_score(). */
 
+  q->trace_mini = ck_alloc(MAP_SIZE >> 3);
+  minimize_bits(q->trace_mini, trace_bits);  
+
   q->exec_us     = (stop_us - start_us) / stage_max;
   q->bitmap_size = count_bytes(trace_bits);
   q->handicap    = handicap;
@@ -3124,6 +3286,9 @@ static u8 whether_add_to_queue(char** argv, u8 fault, u8* mem, int len, u8* fnam
     strcpy(q->fname, fname);
     // printf("%s\n", "after strcpy");
     q->len          = len;
+
+    q->trace_mini = ck_alloc(MAP_SIZE >> 3);
+    minimize_bits(q->trace_mini, trace_bits);  
 
     // printf("qfname:%s\n", q->fname);
     // printf("fname:%s\n", fname);
@@ -7859,6 +8024,7 @@ void do_evaluate_seed(c_seed_t * seedEvalTask){
             queue_top->handicap = seedEvalTask->handicap;
             queue_top->was_fuzzed = seedEvalTask->was_fuzzed;
             queue_top->passed_det = seedEvalTask->passed_det;
+            incremental_dbscan();
             clock_gettime(CLOCK_REALTIME, &timeupd2);
             show_timespec(timeupd1, timeupd2, "map update seed info");
 

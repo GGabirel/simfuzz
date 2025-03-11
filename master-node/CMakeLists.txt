@@ -31,9 +31,9 @@ set(HELPER_PATH ${PREFIX}/lib/afl)
 set(DOC_PATH    ${PREFIX}/share/doc/afl)
 set(MISC_PATH   ${PREFIX}/share/afl)
 
-set ( CMAKE_C_FLAGS " -std=gnu99  -O0 -funroll-loops -Wall -D_FORTIFY_SOURCE=2 -g -Wno-pointer-sign -DAFL_PATH=\\\"${HELPER_PATH}\\\" -DDOC_PATH=\\\"${DOC_PATH}\\\" -DBIN_PATH=\\\"${BIN_PATH}\\\" ")
+set ( CMAKE_C_FLAGS " -std=gnu99  -O0 -march=native -funroll-loops -Wall -D_FORTIFY_SOURCE=2 -g -Wno-pointer-sign -DAFL_PATH=\\\"${HELPER_PATH}\\\" -DDOC_PATH=\\\"${DOC_PATH}\\\" -DBIN_PATH=\\\"${BIN_PATH}\\\" ")
 
-set ( CMAKE_CXX_FLAGS " -std=c++11 -O0 -g -fpermissive -D_FILE_OFFSET_BITS=64 -Wall -D_FORTIFY_SOURCE=2 -Wno-pointer-sign -DAFL_PATH=\\\"${HELPER_PATH}\\\" -DDOC_PATH=\\\"${DOC_PATH}\\\" -DBIN_PATH=\\\"${BIN_PATH}\\\" ")
+set ( CMAKE_CXX_FLAGS " -std=c++11 -O0 -march=native -g -fpermissive -D_FILE_OFFSET_BITS=64 -Wall -D_FORTIFY_SOURCE=2 -Wno-pointer-sign -DAFL_PATH=\\\"${HELPER_PATH}\\\" -DDOC_PATH=\\\"${DOC_PATH}\\\" -DBIN_PATH=\\\"${BIN_PATH}\\\" ")
 
 # 添加头文件
 include_directories(.)
