@@ -9,6 +9,7 @@
 #define MAP_H
 
 #include <string.h>
+#include <stdint.h>
 
 #define MAP_VERSION "0.1.0"
 #ifdef __cplusplus
@@ -86,6 +87,7 @@ typedef map_t(int) map_int_t;
 typedef map_t(char) map_char_t;
 typedef map_t(float) map_float_t;
 typedef map_t(double) map_double_t;
+typedef map_t(uint32_t) map_u32_t;
 #ifdef __cplusplus
 }
 #endif
