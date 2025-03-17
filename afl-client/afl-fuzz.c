@@ -93,6 +93,7 @@ EXP_ST u8 *target_name, url_site[40];//, seed_stream[5000];
 EXP_ST u8 *master_ip;
 int master_port;
 EXP_ST u64 seed_time;
+extern u32 client_fuzzer_id;
 
 
 /* Lots of globals, but mostly for the status UI and other things where it
@@ -104,6 +105,11 @@ void do_evaluate_seed(c_seed_t * seedEvalTask) {
 }
 
 int get_a_fuzz_task(fuzz_task_t* ft) {
+    // empty impl, for compile.
+    return 0;
+}
+
+int get_a_similar_fuzz_task(fuzz_task_t* ft, u32 fid) {
     // empty impl, for compile.
     return 0;
 }
@@ -402,7 +408,6 @@ static inline u32 UR(u32 limit) {
     return random() % limit;
 
 }
-
 
 /* Shuffle an array of pointers. Might be slightly biased. */
 

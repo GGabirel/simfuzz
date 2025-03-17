@@ -250,6 +250,9 @@ void start_evaluate_thread() {
     update_bitmap_thread();  //update_bitmap global_vir
 }
 
+uint32_t num_fuzzers = 0;
+u32 client_fuzzer_id = 0;
+u32 curr_assigned_fuzzer_id = 1; // start from 1 for noise fuzzers
 
 //#define REQUEST_UPDATE  "update"
 int handle_recv_data(unf_proto_t* recv_buf, unf_proto_t* reply){
@@ -259,18 +262,38 @@ int handle_recv_data(unf_proto_t* recv_buf, unf_proto_t* reply){
             /*request seed*/
             printf("REQUEST_NEW_SEEDS: \n");
 
+            if (recv_buf->fuzzer_id == 0) // client uninitialized
+                reply->fuzzer_id = curr_assigned_fuzzer_id++;
+            else
+                reply->fuzzer_id = recv_buf->fuzzer_id;
             
+            assert(curr_assigned_fuzzer_id <= num_fuzzers + 1);
+
             fuzz_task_t ft;
-            if(get_a_fuzz_task(&ft)){
-                strncpy(reply->data, ft.seed_name, sizeof(reply->data));
-                reply->splicing = ft.splicing;
-                reply->havoc_score = ft.havoc_score;
-                ret = sizeof(reply->data);
-                printf("send ft.seed_name: %s\n",ft.seed_name);
+            if (true) { // FIXME
+                if(get_a_similar_fuzz_task(&ft, reply->fuzzer_id)){
+                    strncpy(reply->data, ft.seed_name, sizeof(reply->data));
+                    reply->splicing = ft.splicing;
+                    reply->havoc_score = ft.havoc_score;
+                    ret = sizeof(reply->data);
+                    printf("send ft.seed_name: %s to fuzzer %u\n", ft.seed_name, reply->fuzzer_id);
+                }
+                else {
+                    ret = 0;
+                }
+            } else {
+                if(get_a_fuzz_task(&ft)){
+                    strncpy(reply->data, ft.seed_name, sizeof(reply->data));
+                    reply->splicing = ft.splicing;
+                    reply->havoc_score = ft.havoc_score;
+                    ret = sizeof(reply->data);
+                    printf("send ft.seed_name: %s to fuzzer %u\n", ft.seed_name, reply->fuzzer_id);
+                }
+                else {
+                    ret = 0;
+                }
             }
-            else {
-                ret = 0;
-            }
+
             break;
 
         case REQUEST_UPDATE:
@@ -350,6 +373,7 @@ int request_fuzzing_task(char *master_ip, int master_port, fuzz_task_t* ft){
     unf_proto_t send_buf, recv_buf;
     send_buf.cmd = REQUEST_NEW_SEEDS;
     send_buf.version = 1;
+    send_buf.fuzzer_id = client_fuzzer_id;
     memset((&send_buf)->data, 0, RECV_MAX_SIZE);
 
     send(sock, &send_buf, sizeof(unf_proto_t), 0);
@@ -366,6 +390,12 @@ int request_fuzzing_task(char *master_ip, int master_port, fuzz_task_t* ft){
         close(sock);
         return -1;
     }
+
+    if (client_fuzzer_id == 0) {
+        client_fuzzer_id = recv_buf.fuzzer_id;
+        printf("client fuzzer id: %u\n", client_fuzzer_id);
+    }
+
     strcpy(ft->seed_name, recv_buf.data);
     ft->havoc_score = recv_buf.havoc_score;
     ft->splicing = recv_buf.splicing;

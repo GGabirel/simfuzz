@@ -59,6 +59,7 @@ extern "C" {
 //socket ---
 #define RECV_MAX_SIZE 30
 typedef struct unf_proto_t_ {
+    u32 fuzzer_id;
     uint8_t version;
     uint8_t cmd;
     int bits_loc;
@@ -108,6 +109,7 @@ void master_main_loop(char *master_ip, int master_port);
 
 /*energe assignment*/
 int get_a_fuzz_task(fuzz_task_t* ft);
+int get_a_similar_fuzz_task(fuzz_task_t* ft, u32 fid);
 
 /*update_global_bitmap*/
 void update_global_bits(u64* cur_bits, int location);

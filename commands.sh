@@ -7,7 +7,7 @@ make -j24
 # 测试
 
 build/bin/pfcon -u 192.168.252.5:27017 -i ./experiment/diff_corpus -b ~/programs/target_pcre -e 7
-nohup build/bin/master-node -u 192.168.252.5:27017 -o ~/test0/output_m -b target_pcre7 -l 192.168.252.6 -p 12345 -m none ~/programs/target_pcre_m @@ > /dev/null 2>&1 &
+nohup build/bin/master-node -u 192.168.252.5:27017 -o ~/test0/output_m -b target_pcre7 -l 192.168.252.6 -p 12345 -N 4 -m none ~/programs/target_pcre_m @@ > /dev/null 2>&1 &
 nohup build/bin/afl-fuzz -o ~/test0/output_c1 -u 192.168.252.5:27017 -b target_pcre7 -l 192.168.252.6 -p 12345 -m none ~/programs/target_pcre_c1 @@ > /dev/null 2>&1 &
 nohup build/bin/afl-fuzz -o ~/test0/output_c2 -u 192.168.252.5:27017 -b target_pcre7 -l 192.168.252.6 -p 12345 -m none ~/programs/target_pcre_c2 @@ > /dev/null 2>&1 &
 nohup build/bin/afl-fuzz -o ~/test0/output_c3 -u 192.168.252.5:27017 -b target_pcre7 -l 192.168.252.6 -p 12345 -m none ~/programs/target_pcre_c3 @@ > /dev/null 2>&1 &
