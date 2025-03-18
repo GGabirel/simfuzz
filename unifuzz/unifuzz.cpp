@@ -270,28 +270,18 @@ int handle_recv_data(unf_proto_t* recv_buf, unf_proto_t* reply){
             assert(curr_assigned_fuzzer_id <= num_fuzzers + 1);
 
             fuzz_task_t ft;
-            if (true) { // FIXME
-                if(get_a_similar_fuzz_task(&ft, reply->fuzzer_id)){
-                    strncpy(reply->data, ft.seed_name, sizeof(reply->data));
-                    reply->splicing = ft.splicing;
-                    reply->havoc_score = ft.havoc_score;
-                    ret = sizeof(reply->data);
-                    printf("send ft.seed_name: %s to fuzzer %u\n", ft.seed_name, reply->fuzzer_id);
-                }
-                else {
-                    ret = 0;
-                }
-            } else {
-                if(get_a_fuzz_task(&ft)){
-                    strncpy(reply->data, ft.seed_name, sizeof(reply->data));
-                    reply->splicing = ft.splicing;
-                    reply->havoc_score = ft.havoc_score;
-                    ret = sizeof(reply->data);
-                    printf("send ft.seed_name: %s to fuzzer %u\n", ft.seed_name, reply->fuzzer_id);
-                }
-                else {
-                    ret = 0;
-                }
+            if(get_a_similar_fuzz_task(&ft, reply->fuzzer_id)){
+                strncpy(reply->data, ft.seed_name, sizeof(reply->data));
+                reply->splicing = ft.splicing;
+                reply->havoc_score = ft.havoc_score;
+                ret = sizeof(reply->data);
+                printf("send similar seed ft.seed_name: %s to fuzzer %u\n", ft.seed_name, reply->fuzzer_id);     
+            } else if(get_a_fuzz_task(&ft)){
+                strncpy(reply->data, ft.seed_name, sizeof(reply->data));
+                reply->splicing = ft.splicing;
+                reply->havoc_score = ft.havoc_score;
+                ret = sizeof(reply->data);
+                printf("send ft.seed_name: %s to fuzzer %u\n", ft.seed_name, reply->fuzzer_id);
             }
 
             break;
@@ -430,28 +420,27 @@ void master_main_loop(char *master_ip, int master_port){
     start_evaluate_thread(); //The calling thread reads the seed from mongo and writes to the SeedEvalTask queue.
     while (1) {
         fd_set stFdrTmp = stFdr;
-//        struct timeval sock_tv;
-//        sock_tv.tv_sec = 10;
-//        sock_tv.tv_usec = 10;
+//      struct timeval sock_tv;
+//      sock_tv.tv_sec = 10;
+//      sock_tv.tv_usec = 10;
         ret = select(MaxFd + 1, &stFdrTmp, NULL, NULL, NULL);
-//        printf("MaxFd: %d\n", MaxFd);
-        if (ret <= 0 ) {
-            if (errno == 4) {
+//      printf("MaxFd: %d\n", MaxFd);
+        if (ret < 0 ) { // Changed from ret <= 0 to ret < 0
+            if (errno == 4) { // EINTR
                 // printf("error MaxFd: %d", MaxFd);
-                fprintf(stderr, "fatal error in select, stop.\n\n");
-//                break;
-            }else{
-                // printf("select time out error:%d\n", ret);
+                fprintf(stderr, "select interrupted by signal, continuing.\n");
+                continue;
+            } else {
+                // printf("select error:%d\n", ret);
                 // printf("%s\n", strerror(errno));
                 // printf("%d\n", errno);
                 continue;
             }
-        }
-        if(ret == 0){
-                // printf("select time out error:%d\n", ret);
-                // printf("%s\n", strerror(errno));
-                // printf("%d\n", errno);
-                continue;
+        } else if (ret == 0) {
+            // printf("select time out error:%d\n", ret);
+            // printf("%s\n", strerror(errno));
+            // printf("%d\n", errno);
+            continue;
 
         }
         // printf("select ok,ret=%d\n", ret);
