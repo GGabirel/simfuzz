@@ -8350,7 +8350,9 @@ static int find_next_seed_for_fuzzer(u32 fid) {
     while (1) {
       if ((queue_cur->was_fuzzed || !queue_cur->favored) && UR(100) < SKIP_TO_NEW_PROB){
         queue_cur = queue_cur->next;
-        continue;
+      }
+      else {
+        break;
       }
     }
     // now we get pending favorite/lucky ordinary, update local queue_cur, send to client
