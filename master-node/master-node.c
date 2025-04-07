@@ -8295,12 +8295,22 @@ void find_next_seed(){
 }
 
 
-int get_a_fuzz_task(fuzz_task_t* ft) {
+int get_a_fuzz_task(fuzz_task_t* ft, u32 fid) {
 
   if (!queue_cur) {
     queue_cycle++;
     update_cycle_number_c(queue_cycle);
     queue_cur = queue;
+  }
+
+  if (queue_cur->favored && !queue_cur->was_fuzzed) {
+    pending_favored--;
+    queue_cur->was_fuzzed = 1;
+    char* key = u32_to_str(fid);
+    if (map_get(&fuzzer_pending_fav, key)) {
+      uint32_t old_fav = *fuzzer_pending_fav.ref;
+      map_set(&fuzzer_pending_fav, key, old_fav - 1);
+    }
   }
 
   strncpy(ft->seed_name, queue_cur->fname, sizeof(ft->seed_name));
@@ -8496,6 +8506,16 @@ int get_a_similar_fuzz_task(fuzz_task_t* ft, u32 fid) {
   strncpy(ft->seed_name, current->fname, sizeof(ft->seed_name));
   ft->havoc_score = calculate_score(current);
   if (use_splicing) ft->splicing = 1;
+
+  if (current->favored && !current->was_fuzzed) {
+    pending_favored--;
+    current->was_fuzzed = 1;
+    char* key = u32_to_str(fid);
+    if (map_get(&fuzzer_pending_fav, key)) {
+      uint32_t old_fav = *fuzzer_pending_fav.ref;
+      map_set(&fuzzer_pending_fav, key, old_fav - 1);
+    }
+  }
 
   // Advance to the next suitable sample
   find_next_seed_for_fuzzer(fid);

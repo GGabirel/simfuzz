@@ -104,7 +104,7 @@ void do_evaluate_seed(c_seed_t * seedEvalTask) {
     // empty impl, for compile.
 }
 
-int get_a_fuzz_task(fuzz_task_t* ft) {
+int get_a_fuzz_task(fuzz_task_t* ft, u32 fid) {
     // empty impl, for compile.
     return 0;
 }

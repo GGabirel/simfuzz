@@ -276,7 +276,7 @@ int handle_recv_data(unf_proto_t* recv_buf, unf_proto_t* reply){
                 reply->havoc_score = ft.havoc_score;
                 ret = sizeof(reply->data);
                 printf("send similar seed ft.seed_name: %s to fuzzer %u\n", ft.seed_name, reply->fuzzer_id);     
-            } else if(get_a_fuzz_task(&ft)){
+            } else if(get_a_fuzz_task(&ft, reply->fuzzer_id)){
                 strncpy(reply->data, ft.seed_name, sizeof(reply->data));
                 reply->splicing = ft.splicing;
                 reply->havoc_score = ft.havoc_score;

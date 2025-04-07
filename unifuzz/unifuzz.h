@@ -108,7 +108,7 @@ int init_unifuzz( char* db_name,  char* db_site, char* target_name, char* local_
 void master_main_loop(char *master_ip, int master_port);
 
 /*energe assignment*/
-int get_a_fuzz_task(fuzz_task_t* ft);
+int get_a_fuzz_task(fuzz_task_t* ft, u32 fid);
 int get_a_similar_fuzz_task(fuzz_task_t* ft, u32 fid);
 
 /*update_global_bitmap*/
