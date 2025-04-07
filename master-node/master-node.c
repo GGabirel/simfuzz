@@ -821,8 +821,8 @@ static void mark_as_variable(struct queue_entry* q) {
 
 // Define map types for cluster-to-fuzzer mapping and load balancing
 map_u32_t cluster_to_fuzzer;  // cluster_id -> fuzzer_id
-map_u64_t fuzzer_load_count;  // fuzzer_id -> load of fuzzer (exec_us)
-map_u64_t cluster_load_count; // cluster_id -> load of cluster (exec_us)
+map_u32_t fuzzer_load_count;  // fuzzer_id -> load count of fuzzer
+map_u32_t cluster_load_count; // cluster_id -> load count of cluster
 map_void_t fuzzer_cursors;    // Map to store cursors for each fuzzer
 map_u32_t fuzzer_pending_fav; // fuzzer_id -> pending_favored
 
@@ -922,7 +922,7 @@ void assign_seed_to_cluster(struct queue_entry* seed, uint32_t cluster_id, uint3
       if (map_get(&fuzzer_load_count, old_fuzzer_key)) {
           size_t current_count = *fuzzer_load_count.ref;
           assert(current_count >= 0);
-          map_set(&fuzzer_load_count, old_fuzzer_key, current_count - seed->exec_us);
+          map_set(&fuzzer_load_count, old_fuzzer_key, current_count - 1);
       }
       free(old_fuzzer_key);
   }
@@ -930,7 +930,7 @@ void assign_seed_to_cluster(struct queue_entry* seed, uint32_t cluster_id, uint3
   if (map_get(&cluster_load_count, old_cluster_key)) {
       size_t current_size = *cluster_load_count.ref;
       assert(current_size >= 0);
-      map_set(&cluster_load_count, old_cluster_key, current_size - seed->exec_us);
+      map_set(&cluster_load_count, old_cluster_key, current_size - 1);
   }
   free(old_cluster_key);
 
@@ -945,7 +945,7 @@ void assign_seed_to_cluster(struct queue_entry* seed, uint32_t cluster_id, uint3
       // Assign the cluster to the chosen fuzzer
       map_set(&cluster_to_fuzzer, cluster_key, fuzzer_id);
       // Initialize the cluster size to 1 for the new seed
-      map_set(&cluster_load_count, cluster_key, seed->exec_us);
+      map_set(&cluster_load_count, cluster_key, 1);
   } else {
       // Existing cluster
       fuzzer_id = *cluster_to_fuzzer.ref;  // Get the assigned fuzzer
@@ -955,7 +955,7 @@ void assign_seed_to_cluster(struct queue_entry* seed, uint32_t cluster_id, uint3
           current_size = *cluster_load_count.ref;
       }
       // Increment the cluster size
-      map_set(&cluster_load_count, cluster_key, current_size + seed->exec_us);
+      map_set(&cluster_load_count, cluster_key, current_size + 1);
   }
 
   seed->cluster_id = cluster_id;
@@ -968,7 +968,7 @@ void assign_seed_to_cluster(struct queue_entry* seed, uint32_t cluster_id, uint3
   if (map_get(&fuzzer_load_count, fuzzer_key)) {
       current_count = *fuzzer_load_count.ref;
   }
-  map_set(&fuzzer_load_count, fuzzer_key, current_count + seed->exec_us);
+  map_set(&fuzzer_load_count, fuzzer_key, current_count + 1);
 
   // Clean up allocated keys
   free(fuzzer_key);
@@ -1188,8 +1188,8 @@ void incremental_dbscan(struct queue_entry* seed) {
 
 // Comparator function for sorting clusters by load in descending order
 int compare_clusters(const void* a, const void* b) {
-  uint64_t load_a = *(const uint64_t*)a;
-  uint64_t load_b = *(const uint64_t*)b;
+  uint32_t load_a = *(const uint32_t*)a;
+  uint32_t load_b = *(const uint32_t*)b;
   return (load_b > load_a) - (load_b < load_a); // Descending order
 }
 
@@ -1199,7 +1199,7 @@ void rebalance_fuzzers() {
   uint32_t num_active_clusters = 0;
   for (uint32_t cluster_id = 1; cluster_id < next_cluster_id; cluster_id++) {
       char* cluster_key = u32_to_str(cluster_id);
-      uint64_t* load = map_get(&cluster_load_count, cluster_key);
+      uint32_t* load = map_get(&cluster_load_count, cluster_key);
       if (load && *load > 0) { // Only count clusters with non-zero load
           num_active_clusters++;
       }
@@ -1207,12 +1207,12 @@ void rebalance_fuzzers() {
   }
 
   // Allocate arrays for active cluster loads and IDs
-  uint64_t* cluster_loads = malloc(num_active_clusters * sizeof(uint64_t));
+  uint32_t* cluster_loads = malloc(num_active_clusters * sizeof(uint32_t));
   uint32_t* cluster_ids = malloc(num_active_clusters * sizeof(uint32_t));
   uint32_t index = 0;
   for (uint32_t cluster_id = 1; cluster_id < next_cluster_id; cluster_id++) { // leave alone cluster 0
       char* cluster_key = u32_to_str(cluster_id);
-      uint64_t* load = map_get(&cluster_load_count, cluster_key);
+      uint32_t* load = map_get(&cluster_load_count, cluster_key);
       if (load && *load > 0) { // Store only active clusters
           cluster_loads[index] = *load;
           cluster_ids[index] = cluster_id;
@@ -1222,7 +1222,7 @@ void rebalance_fuzzers() {
   }
 
   // Step 2: Sort clusters by load in descending order
-  qsort(cluster_loads, num_active_clusters, sizeof(uint64_t), compare_clusters);
+  qsort(cluster_loads, num_active_clusters, sizeof(uint32_t), compare_clusters);
 
   // Step 3: Initialize fuzzer loads and mappings (excluding fuzzer 1)
   for (uint32_t id = 2; id <= num_fuzzers; id++) {
@@ -1239,18 +1239,18 @@ void rebalance_fuzzers() {
 
   // Step 4: Assign sorted clusters to the least loaded fuzzer
   for (uint32_t i = 0; i < num_active_clusters; i++) {
-      uint64_t size = cluster_loads[i];
+      uint32_t size = cluster_loads[i];
       // Find the corresponding cluster_id with this load
       for (uint32_t cluster_id = 1; cluster_id < next_cluster_id; cluster_id++) {
           char* cluster_key = u32_to_str(cluster_id);
-          uint64_t* load = map_get(&cluster_load_count, cluster_key);
+          uint32_t* load = map_get(&cluster_load_count, cluster_key);
           if (load && *load == size && !map_get(&cluster_to_fuzzer, cluster_key)) {
               uint32_t best_fuzzer = get_least_loaded_fuzzer();
               map_set(&cluster_to_fuzzer, cluster_key, best_fuzzer);
 
               char* fuzzer_key = u32_to_str(best_fuzzer);
-              uint64_t current_count = 0;
-              uint64_t* current = map_get(&fuzzer_load_count, fuzzer_key);
+              uint32_t current_count = 0;
+              uint32_t* current = map_get(&fuzzer_load_count, fuzzer_key);
               if (current) {
                   current_count = *current;
               }
@@ -1265,9 +1265,9 @@ void rebalance_fuzzers() {
 
   // Step 5: Handle the noise cluster (cluster 0)
   char* noise_key = u32_to_str(0);
-  uint64_t* noise_load = map_get(&cluster_load_count, noise_key);
+  uint32_t* noise_load = map_get(&cluster_load_count, noise_key);
   if (noise_load) { // Assign noise cluster regardless of load (could be 0)
-      uint64_t noise_size = *noise_load;
+      uint32_t noise_size = *noise_load;
       map_set(&cluster_to_fuzzer, noise_key, 1);
       char* fuzzer_key = u32_to_str(1);
       map_set(&fuzzer_load_count, fuzzer_key, noise_size);
@@ -3333,12 +3333,12 @@ static u8 calibrate_case(char** argv, struct queue_entry* q, u8* use_mem,
   char* noise_key = u32_to_str(0);
   if (map_get(&cluster_load_count, noise_key)) {
       size_t current_size = *cluster_load_count.ref;
-      map_set(&cluster_load_count, noise_key, current_size + q->exec_us);
+      map_set(&cluster_load_count, noise_key, current_size + 1);
   }
   noise_key = u32_to_str(1);
   if (map_get(&fuzzer_load_count, noise_key)) {
       size_t current_count = *fuzzer_load_count.ref;
-      map_set(&fuzzer_load_count, noise_key, current_count + q->exec_us);
+      map_set(&fuzzer_load_count, noise_key, current_count + 1);
   }
   free(noise_key);
 
@@ -8346,6 +8346,19 @@ static int find_next_seed_for_fuzzer(u32 fid) {
       return 0; // Empty list
   }
 
+  if (pending_favored) {
+    while (1) {
+      if ((queue_cur->was_fuzzed || !queue_cur->favored) && UR(100) < SKIP_TO_NEW_PROB){
+        queue_cur = queue_cur->next;
+        continue;
+      }
+    }
+    // now we get pending favorite/lucky ordinary, update local queue_cur, send to client
+    map_set(&fuzzer_cursors, key, queue_cur);
+    free(key);
+    return 1;
+  }
+
   struct queue_entry* start = current;
   int wrapped = 0;
 
@@ -8372,15 +8385,13 @@ static int find_next_seed_for_fuzzer(u32 fid) {
 
       // Apply skipping logic
       int skip = 0;
+      map_get(&fuzzer_load_count, key);
+      u32 fuzzer_queued_paths = *fuzzer_load_count.ref;
 
       if (current->fuzzer_id != fid)
           skip = 1;
       else {
-          if (*map_get(&fuzzer_pending_fav, key)) {
-              if ((current->was_fuzzed || !current->favored) && UR(100) < SKIP_TO_NEW_PROB) {
-                  skip = 1;
-              }
-          } else if (!dumb_mode && !current->favored && queued_paths > 10 * num_fuzzers) {
+          if (!dumb_mode && !current->favored && fuzzer_queued_paths > 10) {
               if (queue_cycle > 1 && !current->was_fuzzed) {
                   if (UR(100) < SKIP_NFAV_NEW_PROB) skip = 1;
               } else {
@@ -8444,13 +8455,15 @@ static int please_find_next_seed_for_fuzzer(u32 fid) { // loop till find the nex
           current = current->next;
           continue;
       }
+      map_get(&fuzzer_load_count, key);
+      u32 fuzzer_queued_paths = *fuzzer_load_count.ref;
 
       if (*map_get(&fuzzer_pending_fav, key)) {
           if ((current->was_fuzzed || !current->favored) && UR(100) < SKIP_TO_NEW_PROB) {
             current = current->next;
             continue;
           }
-      } else if (!dumb_mode && !current->favored && queued_paths > 10 * num_fuzzers) {
+      } else if (!dumb_mode && !current->favored && fuzzer_queued_paths > 10) {
           if (queue_cycle > 1 && !current->was_fuzzed) {
               if (UR(100) < SKIP_NFAV_NEW_PROB) {
                   current = current->next;
