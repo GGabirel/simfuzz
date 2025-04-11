@@ -22,6 +22,10 @@ void do_evaluate_seed(c_seed_t * seedEvalTask){
     // empty impl, for compile.
 }
 
+void do_evaluate_seed_helper(c_seed_t * seedEvalTask) {
+  // empty impl, for compile.
+}
+
 
 void send_binary(mongoc_client_t *client, const char* target_name, char* target_path, char *binary_name, char *describe)
 {

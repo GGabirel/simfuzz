@@ -47,7 +47,7 @@ void evaluate_seed() {
     int len_tmp = sd_cur->len_bin;
     sd_cur->seed_bin = (uint8_t *)malloc(len_tmp);
     memcpy(sd_cur->seed_bin, sd_tmp->seed_bin, len_tmp);
-    do_evaluate_seed(sd_cur);
+    do_evaluate_seed_helper(sd_cur);
     free(sd_cur->seed_bin);
     sd_cur->seed_bin = NULL;
     free(sd_cur->recv_fname);

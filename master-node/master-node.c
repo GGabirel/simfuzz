@@ -8604,54 +8604,61 @@ static void save_seed_dry_run(char** argv, u8* file_binary, int len, u8* fname) 
 void do_evaluate_seed(c_seed_t * seedEvalTask){
     // printf("master-node: evaluate_seed: recv_fname: %s\n",seedEvalTask->recv_fname);
     // printf("evaluate_seed: len_bin: %d\n",seedEvalTask->len_bin);
-    if(!map_get(&seed_map, seedEvalTask->recv_fname)) {
-        struct timespec timedry1, timedry2;
-        clock_gettime(CLOCK_REALTIME, &timedry1);
-        save_seed_dry_run(NULL, seedEvalTask->seed_bin, seedEvalTask->len_bin, seedEvalTask->recv_fname);
-        clock_gettime(CLOCK_REALTIME, &timedry2);
-        show_timespec(timedry1, timedry2, "seed dry run");
+    struct timespec timedry1, timedry2;
+    clock_gettime(CLOCK_REALTIME, &timedry1);
+    save_seed_dry_run(NULL, seedEvalTask->seed_bin, seedEvalTask->len_bin, seedEvalTask->recv_fname);
+    clock_gettime(CLOCK_REALTIME, &timedry2);
+    show_timespec(timedry1, timedry2, "seed dry run");
 
-        struct timespec timeupd1, timeupd2;
-        clock_gettime(CLOCK_REALTIME, &timeupd1);
+    struct timespec timeupd1, timeupd2;
+    clock_gettime(CLOCK_REALTIME, &timeupd1);
 
-        u8* qtopfname = queue_top->fname;
-        if(!strcmp(seedEvalTask->recv_fname, qtopfname)){
-          //fixme: update seed info
-            // printf("update_seed_check %s\n", seedEvalTask->recv_fname);
-            /*if seed is interesting, update checked*/
-            map_set(&seed_map, qtopfname, queue_top);
+    u8* qtopfname = queue_top->fname;
+    if(!strcmp(seedEvalTask->recv_fname, qtopfname)){
+      //fixme: update seed info
+        // printf("update_seed_check %s\n", seedEvalTask->recv_fname);
+        /*if seed is interesting, update checked*/
+        map_set(&seed_map, qtopfname, queue_top);
 
-            produce_seed_update(qtopfname, 1);
+        produce_seed_update(qtopfname, 1);
 
-            queue_top->depth = seedEvalTask->depth;
-            if (queue_top->depth > max_depth) max_depth = queue_top->depth;
+        queue_top->depth = seedEvalTask->depth;
+        if (queue_top->depth > max_depth) max_depth = queue_top->depth;
 
-            queue_top->depth = seedEvalTask->depth;
-            queue_top->handicap = seedEvalTask->handicap;
-            queue_top->was_fuzzed = seedEvalTask->was_fuzzed;
-            queue_top->passed_det = seedEvalTask->passed_det;
-            // incremental_dbscan(queue_top);
-            clock_gettime(CLOCK_REALTIME, &timeupd2);
-            show_timespec(timeupd1, timeupd2, "map update seed info");
+        queue_top->depth = seedEvalTask->depth;
+        queue_top->handicap = seedEvalTask->handicap;
+        queue_top->was_fuzzed = seedEvalTask->was_fuzzed;
+        queue_top->passed_det = seedEvalTask->passed_det;
+        // incremental_dbscan(queue_top);
+        clock_gettime(CLOCK_REALTIME, &timeupd2);
+        show_timespec(timeupd1, timeupd2, "map update seed info");
 
-            if (!(stage_cur % stats_update_freq) || stage_cur + 1 == stage_max)
-                show_stats();
-        }
-        else {
-          //fixme: update seed info
-            /*if seed is not interesting, remove it from database*/
-            printf("delete_seed %s \n", seedEvalTask->recv_fname);
-            int32_t checked = 0;
+        if (!(stage_cur % stats_update_freq) || stage_cur + 1 == stage_max)
+            show_stats();
+    }
+    else {
+      //fixme: update seed info
+        /*if seed is not interesting, remove it from database*/
+        printf("delete_seed %s \n", seedEvalTask->recv_fname);
+        int32_t checked = 0;
 
-            produce_seed_update(seedEvalTask->recv_fname, 0);
-            clock_gettime(CLOCK_REALTIME, &timeupd2);
-            // show_timespec(timeupd1, timeupd2, "map update seed delete");
-
-        }
+        produce_seed_update(seedEvalTask->recv_fname, 0);
+        clock_gettime(CLOCK_REALTIME, &timeupd2);
+        // show_timespec(timeupd1, timeupd2, "map update seed delete");
 
     }
+
 }
 
+void do_evaluate_seed_helper(c_seed_t * seedEvalTask) {
+    if (map_get(&seed_map, seedEvalTask->recv_fname)) {
+        struct queue_entry* tmp = *seed_map.ref;
+        if (tmp && tmp->len == seedEvalTask->len_bin) {
+            printf("delete_seed %s \n", seedEvalTask->recv_fname);
+            produce_seed_update(seedEvalTask->recv_fname, 0);
+        } else do_evaluate_seed(seedEvalTask);
+    } else do_evaluate_seed(seedEvalTask);
+}
 
 
 

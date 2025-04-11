@@ -117,6 +117,7 @@ void update_global_bits(u64* cur_bits, int location);
 
 /*seed evaluation*/
 void do_evaluate_seed(c_seed_t * seedEvalTask);
+void do_evaluate_seed_helper(c_seed_t * seedEvalTask);
 
 void check_and_evaluate(); //Get seed information from the seed table from the database and join the queue
 void start_evaluate_thread();
