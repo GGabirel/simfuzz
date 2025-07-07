@@ -120,3 +120,7 @@ build/bin/afl-fuzz -o output/ -u <DB_SERVER_IP>:27017 -b <TASK_NAME> -l <MASTER_
 
 SIMFUZZ is intended for **research and educational use only**. Always obtain permission before fuzzing third-party software or services.
 
+
+> This is only for artifact preview. We will release the source code right upon acceptance to support reproducibility and further research.
+> 
+> You can find the pre-compiled binaries under ./build/
